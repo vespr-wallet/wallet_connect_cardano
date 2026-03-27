@@ -1,0 +1,33 @@
+QA VERIFICATION FOR AGENTS.md CREATION
+======================================
+
+Task: Create AGENTS.md at repo root by copying from .sisyphus/drafts/agents-md-content.md
+
+VERIFICATION RESULTS:
+---------------------
+
+1. File created: /Users/alexandrudochioiu/vespr-wallet/wallet_connect_cardano/AGENTS.md
+   ✓ PASS
+
+2. Content verification (head -5):
+   # AGENTS.md — WalletConnect Cardano Flutter SDK
+   
+   ## Project Overview
+   
+   **Repo**: `vespr-wallet/wallet_connect_cardano`
+   ✓ PASS - Content matches draft
+
+3. Milestone section count (grep -c "## Milestones"):
+   1
+   ✓ PASS - Expected 1
+
+4. cardano_signTx references (grep -c "cardano_signTx"):
+   3
+   ✓ PASS - Expected >= 1
+
+SUMMARY:
+--------
+✓ All QA checks passed
+✓ File created successfully
+✓ Content copied verbatim from draft
+✓ Ready for git commit

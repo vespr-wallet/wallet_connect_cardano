@@ -1,0 +1,21 @@
+{
+  "active_plan": "/Users/alexandrudochioiu/vespr-wallet/wallet_connect_cardano/.sisyphus/plans/milestone-1-core-sdk.md",
+  "started_at": "2026-03-27T22:04:50.307Z",
+  "session_ids": [
+    "ses_2cedb075affelGTY09uERfoWOP",
+    "ses_2ceaa70d0ffeABVyAKqcbdyl3O"
+  ],
+  "plan_name": "milestone-1-core-sdk",
+  "worktree_path": null,
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "Create AGENTS.md from draft content",
+      "session_id": "ses_2ceaa70d0ffeABVyAKqcbdyl3O",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-03-27T22:07:00.448Z"
+    }
+  }
+}

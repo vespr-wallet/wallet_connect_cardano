@@ -1,0 +1,27 @@
+# Dart/Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+build/
+.pub/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Generated
+*.g.dart
+*.config.dart
+
+# Coverage
+coverage/
+.coverage/
+
+# Misc
+*.log
