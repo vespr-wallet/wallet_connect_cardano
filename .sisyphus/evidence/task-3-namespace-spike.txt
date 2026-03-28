@@ -1,0 +1,8 @@
+Conclusion: ACCEPTED (GO) - cip34 namespace works with reown_walletkit.
+
+registerRequestHandler stores chainId as opaque string key (no whitelist).
+registerAccount validates CAIP-2 format only (contains ':'), not specific namespaces.
+Session approval is conformance-based, not namespace-whitelist-based.
+walletkit layer forwards directly to reown_sign with no extra restrictions.
+
+Go/No-Go: GO. No fork needed.
