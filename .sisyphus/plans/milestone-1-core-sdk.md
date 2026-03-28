@@ -137,7 +137,7 @@ Max Concurrent: 3 (Wave 1)
 
 ## TODOs
 
-- [ ] 1. Create AGENTS.md from draft content
+- [x] 1. Create AGENTS.md from draft content
 
   **What to do**:
   - Copy content from `.sisyphus/drafts/agents-md-content.md` to `AGENTS.md` at repo root
@@ -181,7 +181,7 @@ Max Concurrent: 3 (Wave 1)
 
 ---
 
-- [ ] 2. Dart package scaffolding with reown_walletkit dependency
+- [x] 2. Dart package scaffolding with reown_walletkit dependency
 
   **What to do**:
   - Create `pubspec.yaml` with package name `wallet_connect_cardano`, MIT license
@@ -245,7 +245,7 @@ Max Concurrent: 3 (Wave 1)
 
 ---
 
-- [ ] 3. Namespace spike — verify cip34 acceptance by reown_walletkit
+- [x] 3. Namespace spike — verify cip34 acceptance by reown_walletkit
 
   **What to do**:
   - This is a **go/no-go validation** task. Before building anything, verify that `reown_walletkit` accepts the `cip34` namespace.
@@ -323,7 +323,7 @@ Max Concurrent: 3 (Wave 1)
 
 ---
 
-- [ ] 4. CIP-30 error types and data models
+- [x] 4. CIP-30 error types and data models
 
   **What to do**:
   - Create Dart classes/enums for all CIP-30 error types:
@@ -381,7 +381,7 @@ Max Concurrent: 3 (Wave 1)
 
 ---
 
-- [ ] 5. Callback interface (abstract class) for wallet app integration
+- [x] 5. Callback interface (abstract class) for wallet app integration
 
   **What to do**:
   - Create an abstract Dart class (e.g., `CardanoWalletDelegate` or similar) that wallet apps implement
@@ -445,7 +445,7 @@ Max Concurrent: 3 (Wave 1)
 
 ---
 
-- [ ] 6. CIP-30 JSON-RPC method handlers (12 handlers)
+- [x] 6. CIP-30 JSON-RPC method handlers (12 handlers)
 
   **What to do**:
   - Create the handler registration logic that connects `reown_walletkit.registerRequestHandler()` with the `CardanoWalletDelegate` callbacks
@@ -515,7 +515,7 @@ Max Concurrent: 3 (Wave 1)
 
 ---
 
-- [ ] 7. Session lifecycle management
+- [x] 7. Session lifecycle management
 
   **What to do**:
   - Create the main SDK entry point class (e.g., `WalletConnectCardano` or similar) that:
@@ -592,7 +592,7 @@ Max Concurrent: 3 (Wave 1)
 
 ---
 
-- [ ] 8. Basic README and documentation
+- [x] 8. Basic README and documentation
 
   **What to do**:
   - Write `README.md` covering:
@@ -651,15 +651,15 @@ Max Concurrent: 3 (Wave 1)
 
 > After ALL implementation tasks, run these in parallel. ALL must approve.
 
-- [ ] F1. **Plan Compliance Audit**
+- [x] F1. **Plan Compliance Audit**
   Read this plan end-to-end. For each Must Have: verify implementation exists. For each Must NOT Have: search codebase for forbidden patterns (private key handling, Flutter imports in our code, hardcoded project IDs). Check evidence files exist. Compare deliverables against plan.
   Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [N/N] | VERDICT: APPROVE/REJECT`
 
-- [ ] F2. **Code Quality Review**
+- [x] F2. **Code Quality Review**
   Run `dart analyze`. Review all files for: unused imports, missing dartdoc on public APIs, inconsistent naming, empty catch blocks. Check that all code in lib/src/ is pure Dart (no `import 'package:flutter/`).
   Output: `Analyze [PASS/FAIL] | Files [N clean/N issues] | VERDICT`
 
-- [ ] F3. **API Completeness Check**
+- [x] F3. **API Completeness Check**
   Verify all 12 CIP-30 methods have registered handlers. Verify CardanoWalletDelegate has all 11 methods. Verify all 5 error types exist. Verify barrel file exports everything. Verify both event conventions registered.
   Output: `Handlers [12/12] | Delegate [11/11] | Errors [5/5] | Events [4/4] | VERDICT`
 

@@ -3,7 +3,20 @@
   "started_at": "2026-03-27T22:04:50.307Z",
   "session_ids": [
     "ses_2cedb075affelGTY09uERfoWOP",
-    "ses_2ceaa70d0ffeABVyAKqcbdyl3O"
+    "ses_2ceaa70d0ffeABVyAKqcbdyl3O",
+    "ses_2ceaa33a2ffe8fWSAF8Ny9qIlA",
+    "ses_2cc36e4eaffeTUsV5OI2ljhUW9",
+    "ses_2cc373645ffe8ZTeJ0zYKCmmjy",
+    "ses_2cc3372fcffeX80YTXHJ2ElR4F",
+    "ses_2cc331b32ffebtZlMn5W9XW0LK",
+    "ses_2cedb075affelGTY09uERfoWOP",
+    "ses_2cc28dc35ffejDJFKhBlFV7jmV",
+    "ses_2cc2477a4ffejutU3Cyd4kpP1Y",
+    "ses_2cc1fe35bffeyhoYm0GFWp1ubM",
+    "ses_2cc1afbb1ffeHlUoSRiWQupBp5",
+    "ses_2cc18ffebffeDdh7YPQaNmk1wd",
+    "ses_2cc18e1e8ffe81JugoOMpm6rzA",
+    "ses_2cc18bf5effePPqCVC6DdmWeaq"
   ],
   "plan_name": "milestone-1-core-sdk",
   "worktree_path": null,
@@ -16,6 +29,51 @@
       "agent": "Sisyphus-Junior",
       "category": "quick",
       "updated_at": "2026-03-27T22:07:00.448Z"
+    },
+    "todo:3": {
+      "task_key": "todo:3",
+      "task_label": "3",
+      "task_title": "Namespace spike — verify cip34 acceptance by reown_walletkit",
+      "session_id": "ses_2cea7b32bffeF3QQv70QSlK6J0",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-03-27T22:09:28.994Z"
+    },
+    "todo:5": {
+      "task_key": "todo:5",
+      "task_label": "5",
+      "task_title": "Callback interface (abstract class) for wallet app integration",
+      "session_id": "ses_2cc28dc35ffejDJFKhBlFV7jmV",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-03-28T09:50:07.451Z"
+    },
+    "todo:6": {
+      "task_key": "todo:6",
+      "task_label": "6",
+      "task_title": "CIP-30 JSON-RPC method handlers (12 handlers)",
+      "session_id": "ses_2cc2477a4ffejutU3Cyd4kpP1Y",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-03-28T09:55:16.025Z"
+    },
+    "todo:7": {
+      "task_key": "todo:7",
+      "task_label": "7",
+      "task_title": "Session lifecycle management",
+      "session_id": "ses_2cc1fe35bffeyhoYm0GFWp1ubM",
+      "agent": "Sisyphus-Junior",
+      "category": "deep",
+      "updated_at": "2026-03-28T10:00:56.628Z"
+    },
+    "todo:8": {
+      "task_key": "todo:8",
+      "task_label": "8",
+      "task_title": "Basic README and documentation",
+      "session_id": "ses_2cc1afbb1ffeHlUoSRiWQupBp5",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-03-28T10:03:25.797Z"
     }
   }
 }
