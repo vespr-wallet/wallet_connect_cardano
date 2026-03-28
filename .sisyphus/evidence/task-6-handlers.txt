@@ -1,0 +1,9 @@
+grep -c "registerRequestHandler" lib/src/cardano_request_handler.dart
+12
+
+grep -c "_handle" lib/src/cardano_request_handler.dart
+24
+
+dart analyze lib/src/
+Analyzing src...
+No issues found!
