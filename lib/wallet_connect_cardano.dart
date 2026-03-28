@@ -4,3 +4,4 @@ library;
 export 'src/cardano_wallet_delegate.dart';
 export 'src/cardano_request_handler.dart';
 export 'src/models/models.dart';
+export 'src/wallet_connect_cardano.dart';

@@ -1,0 +1,12 @@
+dart analyze 2>&1
+Analyzing wallet_connect_cardano...
+No issues found!
+
+grep -c "cardano_" lib/src/wallet_connect_cardano.dart
+20
+
+grep -c "registerEventEmitter" lib/src/wallet_connect_cardano.dart
+4
+
+grep "cip34:1-764824073" lib/src/wallet_connect_cardano.dart
+  static const String mainnet = 'cip34:1-764824073';
