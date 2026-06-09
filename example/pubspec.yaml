@@ -1,0 +1,27 @@
+name: wc_cardano_example
+description: Example wallet app demonstrating wallet_connect_cardano over WalletConnect v2.
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ">=3.10.0 <4.0.0"
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  wallet_connect_cardano:
+    path: ../
+  cardano_flutter_sdk: ^4.0.1
+  cardano_dart_types: any
+  http: ^1.4.0
+  mobile_scanner: ^7.0.1
+  reown_walletkit: ^1.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
