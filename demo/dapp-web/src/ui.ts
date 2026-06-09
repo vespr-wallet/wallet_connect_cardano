@@ -105,8 +105,13 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
         break;
       }
       case 'cardano_signData': {
-        const addressHex = await resolveChangeAddressHex();
+        const addressHex = await resolvePaymentAddressHex();
         await client.signData(addressHex, SIGN_DATA_PAYLOAD_HEX);
+        break;
+      }
+      case 'cardano_submitTx': {
+        const txHex = await loadUnsignedTxFixture();
+        await client.submitTx(txHex);
         break;
       }
       default:
@@ -114,11 +119,16 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
     }
   }
 
-  async function resolveChangeAddressHex(): Promise<string> {
+  async function resolvePaymentAddressHex(): Promise<string> {
     if (cachedChangeAddressHex) return cachedChangeAddressHex;
-    cachedChangeAddressHex = await client.request<string>(
-      'cardano_getChangeAddress',
-    );
+    const used = await client.request<string[]>('cardano_getUsedAddresses');
+    if (!used?.length) {
+      cachedChangeAddressHex = await client.request<string>(
+        'cardano_getChangeAddress',
+      );
+    } else {
+      cachedChangeAddressHex = used[0]!;
+    }
     return cachedChangeAddressHex;
   }
 

@@ -17,11 +17,31 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
   final bool requireApprovalForSigning;
   RequestApproval? approvalHandler;
 
+  /// Max UTXOs / addresses returned per paginate page (CIP-30 PaginateError threshold).
+  static const int maxPaginateLimit = 100;
+
   Future<bool> _maybeApprove(String method, String summary) async {
     onRequest?.call(method);
     if (!requireApprovalForSigning) return true;
     if (approvalHandler == null) return true;
     return approvalHandler!(method, summary);
+  }
+
+  List<T> _paginateAddresses<T>(List<T> items, CardanoPaginate? paginate) {
+    if (paginate == null) {
+      return items;
+    }
+    if (paginate.limit > maxPaginateLimit) {
+      throw CardanoPaginateError(maxSize: maxPaginateLimit);
+    }
+
+    final start = paginate.page * paginate.limit;
+    if (start >= items.length) {
+      return <T>[];
+    }
+
+    final end = start + paginate.limit;
+    return items.sublist(start, end > items.length ? items.length : end);
   }
 
   @override
@@ -33,11 +53,20 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
     CardanoPaginate? paginate,
   }) async {
     final utxos = await demoWallet.fetchUtxoCborHexList();
-    if (utxos.isEmpty) return <String>[];
-    if (paginate != null && utxos.length > paginate.limit) {
-      throw CardanoPaginateError(maxSize: paginate.limit);
+    if (paginate == null) {
+      return utxos;
     }
-    return utxos;
+    if (paginate.limit > maxPaginateLimit) {
+      throw CardanoPaginateError(maxSize: maxPaginateLimit);
+    }
+
+    // Amount-based coin selection is wallet-specific; return all UTXOs for demo.
+    final start = paginate.page * paginate.limit;
+    if (start >= utxos.length) {
+      return null;
+    }
+    final end = start + paginate.limit;
+    return utxos.sublist(start, end > utxos.length ? utxos.length : end);
   }
 
   @override
@@ -45,7 +74,7 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
 
   @override
   Future<List<String>> getUsedAddresses({CardanoPaginate? paginate}) async {
-    return <String>[demoWallet.paymentAddressHex];
+    return _paginateAddresses(<String>[demoWallet.paymentAddressHex], paginate);
   }
 
   @override
@@ -107,10 +136,25 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
 
   @override
   Future<String> submitTx(String tx) async {
-    throw const CardanoTxSendError(
-      code: CardanoTxSendError.refused,
-      info: 'Demo wallet does not submit transactions',
+    final approved = await _maybeApprove(
+      'cardano_submitTx',
+      'Submit transaction to Cardano preprod',
     );
+    if (!approved) {
+      throw const CardanoTxSendError(
+        code: CardanoTxSendError.refused,
+        info: 'User declined',
+      );
+    }
+
+    try {
+      return await demoWallet.submitTransactionHex(tx);
+    } catch (error) {
+      throw CardanoTxSendError(
+        code: CardanoTxSendError.failure,
+        info: error.toString(),
+      );
+    }
   }
 
   @override

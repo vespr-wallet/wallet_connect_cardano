@@ -116,7 +116,7 @@ export class CardanoDappClient {
     const result = await this.client.request<T>({
       topic: this.session.topic,
       chainId: PREPROD_CHAIN_ID,
-      request: { method, params: params ?? {} },
+      request: { method, params: params ?? [] },
     });
 
     this.log(`← ${method}`, result);
@@ -133,5 +133,9 @@ export class CardanoDappClient {
 
   async signData(addressHex: string, payloadHex: string): Promise<unknown> {
     return this.request('cardano_signData', [addressHex, payloadHex]);
+  }
+
+  async submitTx(txHex: string): Promise<string> {
+    return this.request<string>('cardano_submitTx', [txHex]);
   }
 }
