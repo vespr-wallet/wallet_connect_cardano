@@ -2,6 +2,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // Required by walletconnect_pay (reown_walletkit) for yttrium-wcpay
+        maven { url = uri("https://jitpack.io") }
     }
 }
 

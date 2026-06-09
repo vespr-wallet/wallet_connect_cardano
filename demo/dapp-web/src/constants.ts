@@ -1,3 +1,6 @@
+/** Reown / WalletConnect Cloud project ID (https://cloud.reown.com). */
+export const REOWN_PROJECT_ID = '310c52e0709fb044854ca181562678f8';
+
 /** Preprod chain ID per CIP-34. */
 export const PREPROD_CHAIN_ID = 'cip34:0-1';
 

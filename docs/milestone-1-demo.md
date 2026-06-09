@@ -37,11 +37,11 @@ Fund via the [Cardano preprod faucet](https://docs.cardano.org/cardano-testnet/t
 
 ```bash
 cd demo/dapp-web
-cp .env.example .env
-# Edit .env — set VITE_REOWN_PROJECT_ID=your_id
 npm install
 npm run dev
 ```
+
+(Optional: `cp .env.example .env` to override the default Reown project ID.)
 
 Open `http://localhost:5173` on your desktop browser.
 
@@ -67,8 +67,7 @@ flutter run -t tool/e2e_transfer_test.dart -d macos --release
 
 ```bash
 cd example
-flutter run \
-  --dart-define=REOWN_PROJECT_ID=your_id
+flutter run
 ```
 
 ## Demo flow (video script ~3 min)
@@ -92,7 +91,7 @@ flutter run \
 | Issue | Fix |
 |-------|-----|
 | `signTx` fails — missing fixture | Fund wallet, run `generate_fixture.dart` |
-| Pairing hangs | Same `REOWN_PROJECT_ID` on both sides; check network |
+| Pairing hangs | Both sides use project ID `310c52e0709fb044854ca181562678f8`; check network |
 | Empty balance/UTXOs | Confirm faucet sent to the address shown in the app |
 | Koios errors | Retry; API is `https://preprod.koios.rest/api/v1` |
 
