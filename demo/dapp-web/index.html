@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cardano WC dApp Demo — M1</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Cardano WalletConnect dApp Demo</h1>
+        <p class="subtitle">
+          Test dApp for <code>wallet_connect_cardano</code> — preprod (<code>cip34:0-1</code>)
+        </p>
+      </header>
+
+      <section id="connect-section" class="card">
+        <h2>1. Connect wallet</h2>
+        <p id="status" class="status status-idle">Not connected</p>
+        <button id="btn-connect" type="button">Connect via WalletConnect</button>
+        <div id="qr-container" class="qr-container hidden">
+          <p>Scan with the example wallet app:</p>
+          <canvas id="qr-canvas"></canvas>
+          <label class="uri-label" for="wc-uri">WalletConnect URI</label>
+          <textarea id="wc-uri" readonly rows="3"></textarea>
+        </div>
+        <div id="session-info" class="session-info hidden"></div>
+      </section>
+
+      <section id="methods-section" class="card hidden">
+        <h2>2. Read methods</h2>
+        <div class="button-grid">
+          <button type="button" data-method="cardano_getExtensions">getExtensions</button>
+          <button type="button" data-method="cardano_getNetworkId">getNetworkId</button>
+          <button type="button" data-method="cardano_getBalance">getBalance</button>
+          <button type="button" data-method="cardano_getUsedAddresses">getUsedAddresses</button>
+          <button type="button" data-method="cardano_getUnusedAddresses">getUnusedAddresses</button>
+          <button type="button" data-method="cardano_getChangeAddress">getChangeAddress</button>
+          <button type="button" data-method="cardano_getRewardAddresses">getRewardAddresses</button>
+          <button type="button" data-method="cardano_getRewardAddress">getRewardAddress</button>
+          <button type="button" data-method="cardano_getUtxos">getUtxos</button>
+          <button type="button" id="btn-run-read" class="primary">Run all read methods</button>
+        </div>
+      </section>
+
+      <section id="write-section" class="card hidden">
+        <h2>3. Sign &amp; submit</h2>
+        <p class="hint">
+          signTx builds a fresh self-transfer from live wallet UTXOs (largest ADA-only
+          input, 0.3&nbsp;ADA fee). Submit after signing.
+        </p>
+        <div class="button-grid">
+          <button type="button" id="btn-sign-tx" data-method="cardano_signTx">signTx</button>
+          <button type="button" id="btn-submit-tx" data-method="cardano_submitTx" disabled>
+            submitTx
+          </button>
+          <button type="button" data-method="cardano_signData">signData</button>
+        </div>
+        <div id="tx-status" class="tx-status hidden"></div>
+      </section>
+
+      <section id="log-section" class="card">
+        <h2>4. Results log</h2>
+        <pre id="log"></pre>
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
