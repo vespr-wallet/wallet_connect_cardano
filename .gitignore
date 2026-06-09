@@ -25,3 +25,11 @@ coverage/
 
 # Misc
 *.log
+
+# Sisyphus (local planning / agent tooling)
+.sisyphus/
+
+# Web dApp demo
+demo/dapp-web/node_modules/
+demo/dapp-web/dist/
+demo/dapp-web/.env
