@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../wallet/wallet_connect_service.dart';
 import 'qr_scan_screen.dart';
@@ -15,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _uriController = TextEditingController();
   final List<RequestLogEntry> _log = <RequestLogEntry>[];
+  bool _proposalSheetOpen = false;
 
   @override
   void initState() {
@@ -27,29 +30,44 @@ class _HomeScreenState extends State<HomeScreen> {
     widget.service.stateChanges.listen((_) {
       if (!mounted) return;
       setState(() {});
-      _maybeShowProposal();
+      _scheduleShowProposal();
+    });
+  }
+
+  void _scheduleShowProposal() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(_maybeShowProposal());
+      }
     });
   }
 
   Future<void> _maybeShowProposal() async {
     final proposal = widget.service.pendingProposal;
-    if (proposal == null || !mounted) return;
+    if (proposal == null || !mounted || _proposalSheetOpen) return;
 
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => SessionProposalSheet(
-        proposal: proposal,
-        onApprove: () async {
-          Navigator.of(context).pop();
-          await widget.service.approvePendingSession();
-        },
-        onReject: () async {
-          Navigator.of(context).pop();
-          await widget.service.rejectPendingSession();
-        },
-      ),
-    );
+    _proposalSheetOpen = true;
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        enableDrag: false,
+        builder: (context) => SessionProposalSheet(
+          proposal: proposal,
+          onApprove: () async {
+            Navigator.of(context).pop();
+            await widget.service.approvePendingSession();
+          },
+          onReject: () async {
+            Navigator.of(context).pop();
+            await widget.service.rejectPendingSession();
+          },
+        ),
+      );
+    } finally {
+      _proposalSheetOpen = false;
+    }
   }
 
   Future<bool> _confirmSigning(String method, String summary) async {
@@ -93,7 +111,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _pair(Uri uri) async {
     try {
       await widget.service.pair(uri);
-      _showSnack('Pairing initiated');
+      if (!mounted) return;
+      _scheduleShowProposal();
+      _showSnack('Pairing initiated — approve the connection on this device');
     } catch (error) {
       _showSnack('Pairing failed: $error');
     }
@@ -145,11 +165,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text('dApp: ${service.connectedDappName ?? "Unknown"}'),
-                    Text('Chain: cip34:0-1 (preprod)'),
+                    const Text('Chain: cip34:0-1 (preprod)'),
                   ],
                 ),
               ),
             ),
+          if (service.isAwaitingProposal && !service.hasPendingProposal) ...<Widget>[
+            const SizedBox(height: 8),
+            const LinearProgressIndicator(),
+            const SizedBox(height: 8),
+            const Text('Waiting for connection request from dApp…'),
+          ],
+          if (service.lastError != null) ...<Widget>[
+            const SizedBox(height: 8),
+            Card(
+              color: Colors.red.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  service.lastError!,
+                  style: TextStyle(color: Colors.red.shade900),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           Text('Wallet address', style: Theme.of(context).textTheme.titleSmall),
           SelectableText(service.delegate.demoWallet.paymentAddressBech32),

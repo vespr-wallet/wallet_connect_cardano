@@ -60,7 +60,7 @@ export class CardanoDappClient {
     }
 
     const { uri, approval } = await this.client.connect({
-      optionalNamespaces: {
+      requiredNamespaces: {
         cip34: {
           chains: [PREPROD_CHAIN_ID],
           methods: [...CIP30_METHODS],
@@ -75,14 +75,19 @@ export class CardanoDappClient {
 
     this.log('Pairing URI generated — scan with wallet app');
 
-    void approval().then((session) => {
-      this.session = session;
-      this.log('Session established', {
-        topic: session.topic,
-        accounts: session.namespaces.cip34?.accounts,
+    void approval()
+      .then((session) => {
+        this.session = session;
+        this.log('Session established', {
+          topic: session.topic,
+          accounts: session.namespaces.cip34?.accounts,
+        });
+        this.onSessionChange?.(true);
+      })
+      .catch((error: unknown) => {
+        this.log('Session approval failed', String(error));
+        this.onSessionChange?.(false);
       });
-      this.onSessionChange?.(true);
-    });
 
     return { uri };
   }

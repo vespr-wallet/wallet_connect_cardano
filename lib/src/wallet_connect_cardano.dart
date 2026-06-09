@@ -72,6 +72,10 @@ class WalletConnectCardano {
   Event<SessionProposalEvent> get onSessionProposal =>
       _walletKit.onSessionProposal;
 
+  /// Emits when a session proposal cannot be satisfied (e.g. namespace mismatch).
+  Event<SessionProposalErrorEvent> get onSessionProposalError =>
+      _walletKit.onSessionProposalError;
+
   /// Emits when a dApp sends a session authentication request.
   Event<SessionAuthRequest> get onSessionAuthRequest =>
       _walletKit.onSessionAuthRequest;
@@ -104,30 +108,48 @@ class WalletConnectCardano {
     }
   }
 
+  /// Registers a wallet account for [chainId].
+  ///
+  /// Required so WalletKit can match incoming session proposals to the cip34
+  /// namespace. Call once per supported chain after [initialize].
+  void registerAccount({
+    required String chainId,
+    required String accountAddress,
+  }) {
+    _walletKit.registerAccount(
+      chainId: chainId,
+      accountAddress: accountAddress,
+    );
+  }
+
   /// Pairs with a dApp using a WalletConnect URI.
   Future<PairingInfo> pair({required Uri uri}) => _walletKit.pair(uri: uri);
 
   /// Approves a pending session proposal and creates a Cardano session.
   ///
   /// [id] must be the proposal ID from [onSessionProposal].
-  /// [accountAddress] is formatted as `{chainId}:{address}` when sent as CAIP-10.
+  /// Pass [namespaces] from `proposal.params.generatedNamespaces` when present;
+  /// otherwise [accountAddress] is used to build the cip34 namespace manually.
   Future<ApproveResponse> approveSession({
     required int id,
     required String accountAddress,
     String? chainId,
+    Map<String, Namespace>? namespaces,
   }) {
-    final String chain = chainId ?? chainIds.first;
-    final String caip10 = '$chain:$accountAddress';
+    final Map<String, Namespace> approvedNamespaces = namespaces ??
+        <String, Namespace>{
+          'cip34': Namespace(
+            accounts: <String>[
+              '${chainId ?? chainIds.first}:$accountAddress',
+            ],
+            methods: _cip30Methods,
+            events: _sessionEvents,
+          ),
+        };
 
     return _walletKit.approveSession(
       id: id,
-      namespaces: <String, Namespace>{
-        'cip34': Namespace(
-          accounts: <String>[caip10],
-          methods: _cip30Methods,
-          events: _sessionEvents,
-        ),
-      },
+      namespaces: approvedNamespaces,
     );
   }
 

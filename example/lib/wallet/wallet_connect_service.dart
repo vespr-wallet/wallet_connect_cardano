@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:reown_walletkit/reown_walletkit.dart';
 import 'package:wallet_connect_cardano/wallet_connect_cardano.dart';
 
@@ -25,6 +26,8 @@ class WalletConnectService {
   SessionProposalEvent? _pendingProposal;
   String? _connectedDappName;
   String? _activeSessionTopic;
+  String? _lastError;
+  bool _awaitingProposal = false;
 
   final StreamController<RequestLogEntry> _requestLogController =
       StreamController<RequestLogEntry>.broadcast();
@@ -37,9 +40,11 @@ class WalletConnectService {
 
   bool get isInitialized => _sdk != null;
   bool get hasPendingProposal => _pendingProposal != null;
+  bool get isAwaitingProposal => _awaitingProposal;
   bool get isConnected => _activeSessionTopic != null;
   String? get connectedDappName => _connectedDappName;
   String? get activeSessionTopic => _activeSessionTopic;
+  String? get lastError => _lastError;
   SessionProposalEvent? get pendingProposal => _pendingProposal;
 
   Future<void> initialize() async {
@@ -65,31 +70,120 @@ class WalletConnectService {
 
     await _sdk!.initialize();
 
+    _sdk!.registerAccount(
+      chainId: WalletConnectCardano.preprod,
+      accountAddress: delegate.demoWallet.paymentAddressBech32,
+    );
+
     _sdk!.onSessionProposal.subscribe(_onSessionProposal);
+    _sdk!.onSessionProposalError.subscribe(_onSessionProposalError);
+    _sdk!.walletKit.onSessionConnect.subscribe(_onSessionConnect);
+    _sdk!.walletKit.core.relayClient.onRelayClientError.subscribe(
+      _onRelayClientError,
+    );
     _sdk!.walletKit.onSessionDelete.subscribe((_) {
       _activeSessionTopic = null;
       _connectedDappName = null;
       _notify();
     });
+
+    debugPrint(
+      '[WC Example] relay connected: '
+      '${_sdk!.walletKit.core.relayClient.isConnected}',
+    );
+  }
+
+  void _onRelayClientError(ErrorEvent? event) {
+    if (event == null) return;
+    debugPrint('[WC Example] relay error: ${event.error}');
+    _lastError = 'Relay error: ${event.error}';
+    _notify();
   }
 
   void _onSessionProposal(SessionProposalEvent event) {
+    debugPrint(
+      '[WC Example] session proposal from ${event.params.proposer.metadata.name}',
+    );
     _pendingProposal = event;
+    _awaitingProposal = false;
+    _lastError = null;
+    _notify();
+  }
+
+  void _onSessionProposalError(SessionProposalErrorEvent event) {
+    debugPrint('[WC Example] session proposal error: ${event.error.message}');
+    _awaitingProposal = false;
+    _lastError = event.error.message;
+    _notify();
+  }
+
+  void _onSessionConnect(SessionConnect? event) {
+    if (event == null) return;
+    debugPrint('[WC Example] session connected: ${event.session.topic}');
+    _pendingProposal = null;
+    _awaitingProposal = false;
+    _activeSessionTopic = event.session.topic;
+    _connectedDappName = event.session.peer.metadata.name;
     _notify();
   }
 
   Future<void> pair(Uri uri) async {
+    _lastError = null;
+    _awaitingProposal = true;
+    _notify();
+
     await _sdk!.pair(uri: uri);
+    _ingestPendingProposals();
+
+    if (_pendingProposal != null) {
+      return;
+    }
+
+    for (var attempt = 0; attempt < 45; attempt++) {
+      if (!_awaitingProposal || _pendingProposal != null) {
+        return;
+      }
+
+      await Future<void>.delayed(const Duration(seconds: 1));
+      _ingestPendingProposals();
+
+      if (_pendingProposal != null) {
+        return;
+      }
+    }
+
+    if (_awaitingProposal && _pendingProposal == null) {
+      _awaitingProposal = false;
+      final relayConnected = _sdk!.walletKit.core.relayClient.isConnected;
+      _lastError = relayConnected
+          ? 'Timed out waiting for session proposal. In the browser, click Connect '
+              'first so it shows "Waiting for wallet…", then scan the fresh QR.'
+          : 'Wallet relay is offline — rebuild the app after granting INTERNET '
+              'permission and check your network.';
+      _notify();
+    }
+  }
+
+  void _ingestPendingProposals() {
+    final pending = _sdk!.walletKit.getPendingSessionProposals();
+    if (pending.isEmpty) {
+      return;
+    }
+
+    final proposal = pending.values.first;
+    _onSessionProposal(SessionProposalEvent(proposal.id, proposal));
   }
 
   Future<void> approvePendingSession() async {
     final proposal = _pendingProposal;
     if (proposal == null) return;
 
+    final generated = proposal.params.generatedNamespaces;
     await _sdk!.approveSession(
       id: proposal.id,
       accountAddress: delegate.demoWallet.paymentAddressBech32,
       chainId: WalletConnectCardano.preprod,
+      namespaces: generated != null && generated.isNotEmpty ? generated : null,
     );
 
     _pendingProposal = null;
