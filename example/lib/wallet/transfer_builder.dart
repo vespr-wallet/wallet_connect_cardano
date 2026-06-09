@@ -1,12 +1,14 @@
 import 'package:cardano_dart_types/cardano_dart_types.dart';
 
 /// Builds a simple lovelace-only self-transfer on preprod.
+///
+/// Demo flow: one ADA-only input → one output with `inputLovelace - fee`,
+/// fee fixed at 300_000 lovelace (0.3 ADA).
 class TransferBuilder {
   TransferBuilder._();
 
-  /// Fixed fee for demo self-transfers (0.3 ADA). The Cardano Flutter SDK does
-  /// not expose fee estimation; this is a conservative hardcoded value.
-  static final BigInt selfTransferFeeLovelace = BigInt.from(300000);
+  /// Fixed fee for demo self-transfers (0.3 ADA).
+  static final BigInt selfTransferFeeLovelace = BigInt.from(300_000);
 
   /// Picks the largest lovelace-only UTXO (no native assets).
   static Utxo pickLargestLovelaceOnlyUtxo(List<Utxo> utxos) {

@@ -45,16 +45,18 @@ npm run dev
 
 Open `http://localhost:5173` on your desktop browser.
 
-### 2. Generate unsigned tx fixture (after funding)
+### 2. Optional: unsigned tx fixture (after funding)
 
-From `example/` (requires FFI — use Flutter on macOS or a device, not plain `dart run`):
+The example wallet **rebuilds** the signTx transaction from live Koios UTXOs on each
+sign (largest ADA-only input, 0.3 ADA fee, self-transfer). The web dApp still passes a
+placeholder `unsigned-tx.hex` only because CIP-30 requires a `tx` parameter.
+
+To refresh that placeholder file:
 
 ```bash
 cd example
 flutter run -t tool/generate_fixture.dart -d macos --release
 ```
-
-This writes `demo/dapp-web/public/fixtures/unsigned-tx.hex`.
 
 To verify signing and submission on preprod (2 self-transfers):
 
@@ -90,7 +92,9 @@ flutter run
 
 | Issue | Fix |
 |-------|-----|
-| `signTx` fails — missing fixture | Fund wallet, run `generate_fixture.dart` |
+| `signTx` fails — no UTXOs | Fund wallet via preprod faucet |
+| Submit fails — UTXO already spent | Re-run **signTx** (wallet picks fresh UTXOs) |
+| Missing `unsigned-tx.hex` on web | Run `generate_fixture.dart` (placeholder only) |
 | Pairing hangs | Both sides use project ID `310c52e0709fb044854ca181562678f8`; check network |
 | Empty balance/UTXOs | Confirm faucet sent to the address shown in the app |
 | Koios errors | Retry; API is `https://preprod.koios.rest/api/v1` |

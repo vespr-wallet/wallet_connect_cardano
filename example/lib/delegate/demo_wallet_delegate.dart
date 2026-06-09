@@ -115,12 +115,23 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
 
   @override
   Future<String> signTx(String tx, {bool partialSign = false}) async {
-    final normalizedTx = tx.trim().toLowerCase();
+    CardanoTransaction unsigned;
+    try {
+      // Rebuild from live Koios UTXOs — ignore stale unsigned tx from the dApp fixture.
+      unsigned = await demoWallet.buildSelfTransferUnsigned();
+    } catch (error) {
+      throw CardanoTxSignError(
+        code: CardanoTxSignError.proofGeneration,
+        info: error.toString(),
+      );
+    }
+
+    final unsignedHex = unsigned.serializeHexString().toLowerCase();
     final approved = await _maybeApprove(
       SigningApprovalRequest(
         method: 'cardano_signTx',
-        subtitle: 'Review transaction',
-        detail: SigningDisplay.formatTransaction(normalizedTx),
+        subtitle: 'Review transaction (live UTXOs)',
+        detail: SigningDisplay.formatTransaction(unsignedHex),
       ),
     );
     if (!approved) {
@@ -132,9 +143,8 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
 
     onOperationStarted?.call('cardano_signTx');
     try {
-      final unsigned = CardanoTransaction.deserializeFromHex(normalizedTx);
-      final witnessHex = await demoWallet.signTransactionHex(normalizedTx);
-      _lastUnsignedTxHex = normalizedTx;
+      final witnessHex = await demoWallet.signTransactionHex(unsignedHex);
+      _lastUnsignedTxHex = unsignedHex;
       _lastSignedTxHex = await demoWallet.signAndSerializeTransaction(unsigned);
       onOperationSucceeded?.call('cardano_signTx');
       return witnessHex;
@@ -209,20 +219,22 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
   }
 
   String _resolveSignedTx(String txHex) {
-    if (_lastSignedTxHex != null &&
-        _lastUnsignedTxHex != null &&
-        txHex == _lastUnsignedTxHex) {
+    if (_lastSignedTxHex == null) {
+      throw const CardanoTxSendError(
+        code: CardanoTxSendError.refused,
+        info: 'Sign the transaction first with cardano_signTx',
+      );
+    }
+
+    // dApp may still send a stale fixture hex; submit the tx signed in this session.
+    if (_lastUnsignedTxHex != null && txHex == _lastUnsignedTxHex) {
+      return _lastSignedTxHex!;
+    }
+    if (txHex == _lastSignedTxHex) {
       return _lastSignedTxHex!;
     }
 
-    if (_lastSignedTxHex != null && txHex == _lastSignedTxHex) {
-      return _lastSignedTxHex!;
-    }
-
-    throw const CardanoTxSendError(
-      code: CardanoTxSendError.refused,
-      info: 'Sign the transaction first with cardano_signTx',
-    );
+    return _lastSignedTxHex!;
   }
 
   @override

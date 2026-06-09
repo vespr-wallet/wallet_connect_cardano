@@ -130,16 +130,29 @@ button:disabled {
   opacity: 0.85;
 }
 
-.tx-success {
+.tx-status {
   margin-top: 1rem;
   padding: 0.9rem 1rem;
   border-radius: 8px;
+}
+
+.tx-status--pending {
+  background: color-mix(in srgb, CanvasText 8%, transparent);
+  border: 1px solid color-mix(in srgb, CanvasText 18%, transparent);
+}
+
+.tx-status--success {
   background: color-mix(in srgb, var(--success) 14%, transparent);
   border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
 }
 
-.tx-success a {
+.tx-status--success a {
   color: var(--accent-muted);
+}
+
+.tx-status--error {
+  background: color-mix(in srgb, var(--error, #c0392b) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error, #c0392b) 35%, transparent);
 }
 
 .hidden {

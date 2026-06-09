@@ -17,7 +17,7 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
   const methodsSection = document.getElementById('methods-section')!;
   const writeSection = document.getElementById('write-section')!;
   const submitBtn = document.getElementById('btn-submit-tx') as HTMLButtonElement;
-  const txSuccessEl = document.getElementById('tx-success')!;
+  const txStatusEl = document.getElementById('tx-status')!;
 
   let cachedPaymentAddressHex: string | null = null;
   let cachedUnsignedTxHex: string | null = null;
@@ -72,8 +72,7 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
       methodsSection.classList.add('hidden');
       writeSection.classList.add('hidden');
       sessionInfo.classList.add('hidden');
-      txSuccessEl.classList.add('hidden');
-      txSuccessEl.innerHTML = '';
+      clearTxStatus();
       cachedPaymentAddressHex = null;
       signedWitnessHex = null;
       submitBtn.disabled = true;
@@ -114,10 +113,12 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
   async function invokeMethod(method: string): Promise<void> {
     switch (method) {
       case 'cardano_signTx': {
+        // CIP-30 requires a tx param; the wallet rebuilds from live Koios UTXOs.
+        cachedUnsignedTxHex = null;
         const txHex = await loadUnsignedTxFixture();
         signedWitnessHex = await client.signTx(txHex, false);
         submitBtn.disabled = false;
-        txSuccessEl.classList.add('hidden');
+        clearTxStatus();
         break;
       }
       case 'cardano_signData': {
@@ -129,13 +130,15 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
         if (!signedWitnessHex) {
           throw new Error('Sign the transaction first with signTx');
         }
-        txSuccessEl.classList.add('hidden');
-        txSuccessEl.innerHTML =
-          '<p><strong>Submitting transaction…</strong></p>';
-        txSuccessEl.classList.remove('hidden');
-        const txHex = await loadUnsignedTxFixture();
-        const txHash = await client.submitTx(txHex);
-        showTxSuccess(txHash);
+        showTxSubmitting();
+        try {
+          const txHex = await loadUnsignedTxFixture();
+          const txHash = await client.submitTx(txHex);
+          showTxSuccess(txHash);
+        } catch (error) {
+          showTxFailure(error);
+          throw error;
+        }
         break;
       }
       default:
@@ -143,14 +146,51 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
     }
   }
 
+  function clearTxStatus(): void {
+    txStatusEl.className = 'tx-status hidden';
+    txStatusEl.innerHTML = '';
+  }
+
+  function showTxSubmitting(): void {
+    txStatusEl.className = 'tx-status tx-status--pending';
+    txStatusEl.innerHTML = '<p><strong>Submitting transaction…</strong></p>';
+  }
+
   function showTxSuccess(txHash: string): void {
     const url = `${CARDANOSCAN_PREPROD_TX_BASE}${txHash}`;
-    txSuccessEl.innerHTML = `
+    txStatusEl.className = 'tx-status tx-status--success';
+    txStatusEl.innerHTML = `
       <p><strong>Transaction submitted successfully</strong></p>
       <p><code>${txHash}</code></p>
       <p><a href="${url}" target="_blank" rel="noopener noreferrer">View on preprod Cardanoscan</a></p>
     `;
-    txSuccessEl.classList.remove('hidden');
+  }
+
+  function showTxFailure(error: unknown): void {
+    txStatusEl.className = 'tx-status tx-status--error';
+    txStatusEl.innerHTML = `
+      <p><strong>Transaction submit failed</strong></p>
+      <p>${escapeHtml(formatUiError(error))}</p>
+      <p class="hint">Try signTx again to build a fresh transaction from current UTXOs.</p>
+    `;
+  }
+
+  function formatUiError(error: unknown): string {
+    if (error == null) return 'Unknown error';
+    if (typeof error === 'string') return error;
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'object') {
+      const record = error as Record<string, unknown>;
+      if (typeof record.message === 'string') return record.message;
+    }
+    return String(error);
+  }
+
+  function escapeHtml(text: string): string {
+    return text
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
   }
 
   async function resolvePaymentAddressHex(): Promise<string> {

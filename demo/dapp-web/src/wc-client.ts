@@ -115,17 +115,22 @@ export class CardanoDappClient {
       params == null ? [] : Array.isArray(params) ? params : [params];
     this.log(`→ ${method}`, wireParams.length > 0 ? wireParams : undefined);
 
-    const result = await this.client.request<T>({
-      topic: this.session.topic,
-      chainId: PREPROD_CHAIN_ID,
-      request: { method, params: wireParams },
-    });
+    try {
+      const result = await this.client.request<T>({
+        topic: this.session.topic,
+        chainId: PREPROD_CHAIN_ID,
+        request: { method, params: wireParams },
+      });
 
-    this.log(
-      `← ${method}`,
-      result === undefined ? '(no result)' : result,
-    );
-    return result;
+      this.log(
+        `← ${method}`,
+        result === undefined ? '(no result)' : result,
+      );
+      return result;
+    } catch (error) {
+      this.log(`← ${method} ERROR`, formatRequestError(error));
+      throw error;
+    }
   }
 
   async getNetworkId(): Promise<number> {
@@ -143,4 +148,26 @@ export class CardanoDappClient {
   async submitTx(txHex: string): Promise<string> {
     return this.request<string>('cardano_submitTx', [txHex]);
   }
+}
+
+function formatRequestError(error: unknown): string {
+  if (error == null) return 'Unknown error';
+  if (typeof error === 'string') return error;
+
+  if (typeof error === 'object') {
+    const record = error as Record<string, unknown>;
+    const message = record.message;
+    if (typeof message === 'string' && message.length > 0) {
+      return message;
+    }
+    const data = record.data;
+    if (typeof data === 'object' && data != null) {
+      const dataMessage = (data as Record<string, unknown>).message;
+      if (typeof dataMessage === 'string' && dataMessage.length > 0) {
+        return dataMessage;
+      }
+    }
+  }
+
+  return String(error);
 }

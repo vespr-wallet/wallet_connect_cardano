@@ -47,7 +47,8 @@
       <section id="write-section" class="card hidden">
         <h2>3. Sign &amp; submit</h2>
         <p class="hint">
-          First sign the unsigned fixture transaction, then submit it on-chain.
+          signTx builds a fresh self-transfer from live wallet UTXOs (largest ADA-only
+          input, 0.3&nbsp;ADA fee). Submit after signing.
         </p>
         <div class="button-grid">
           <button type="button" id="btn-sign-tx" data-method="cardano_signTx">signTx</button>
@@ -56,7 +57,7 @@
           </button>
           <button type="button" data-method="cardano_signData">signData</button>
         </div>
-        <div id="tx-success" class="tx-success hidden"></div>
+        <div id="tx-status" class="tx-status hidden"></div>
       </section>
 
       <section id="log-section" class="card">

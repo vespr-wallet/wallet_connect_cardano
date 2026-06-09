@@ -122,17 +122,48 @@ class DemoWallet {
     return witnessSet.serializeHexString();
   }
 
-  /// Builds an unsigned self-transfer to the payment address using the largest
-  /// lovelace-only UTXO from Koios.
+  /// Builds an unsigned self-transfer from live Koios UTXOs:
+  ///
+  /// 1. Largest lovelace-only input (no native tokens / NFTs)
+  /// 2. One output to the payment address with `inputLovelace - fee`
+  /// 3. Fixed fee of [TransferBuilder.selfTransferFeeLovelace] (0.3 ADA)
   Future<CardanoTransaction> buildSelfTransferUnsigned() async {
-    final utxoHexList = await fetchUtxoCborHexList();
-    final utxos = utxoHexList.map(Utxo.deserializeHex).toList();
-    final input = TransferBuilder.pickLargestLovelaceOnlyUtxo(utxos);
+    final koiosUtxos = await koios.getAddressUtxos(paymentAddressBech32);
+    final input = _pickLargestLovelaceOnlyKoiosUtxo(koiosUtxos);
     return TransferBuilder.buildSelfTransfer(
-      inputUtxo: input,
+      inputUtxo: _koiosUtxoMapToUtxo(input),
       destinationBech32: paymentAddressBech32,
       feeLovelace: TransferBuilder.selfTransferFeeLovelace,
     );
+  }
+
+  Map<String, dynamic> _pickLargestLovelaceOnlyKoiosUtxo(
+    List<Map<String, dynamic>> utxos,
+  ) {
+    Map<String, dynamic>? best;
+    var bestLovelace = BigInt.zero;
+
+    for (final utxo in utxos) {
+      final assetList = utxo['asset_list'];
+      if (assetList is List && assetList.isNotEmpty) {
+        continue;
+      }
+
+      final lovelace = BigInt.parse(utxo['value'] as String);
+      if (lovelace > bestLovelace) {
+        bestLovelace = lovelace;
+        best = utxo;
+      }
+    }
+
+    if (best == null) {
+      throw StateError('No lovelace-only UTXO available');
+    }
+    return best;
+  }
+
+  Utxo _koiosUtxoMapToUtxo(Map<String, dynamic> utxo) {
+    return Utxo.deserializeHex(_koiosUtxoToCborHex(utxo));
   }
 
   Future<String> signAndSerializeTransaction(CardanoTransaction unsignedTx) async {
