@@ -62,25 +62,31 @@ class CardanoRequestHandler {
       chainId: chainId,
       method: method,
       handler: (String topic, dynamic params) async {
-        final request = _pendingRequest(walletKit, topic, method);
+        final SessionRequest request = _pendingRequest(
+          walletKit,
+          topic,
+          method,
+        );
+        Object? handlerError;
+        dynamic result;
+
         try {
-          final result = await handler(topic, params);
-          await walletKit.respondSessionRequest(
-            topic: topic,
-            response: JsonRpcResponse<dynamic>(
-              id: request.id,
-              result: result,
-            ),
-          );
+          result = await handler(topic, params);
         } catch (error) {
-          await walletKit.respondSessionRequest(
-            topic: topic,
-            response: JsonRpcResponse<dynamic>(
-              id: request.id,
-              error: _toJsonRpcError(error),
-            ),
-          );
+          handlerError = error;
         }
+
+        final JsonRpcResponse<dynamic> response = handlerError == null
+            ? JsonRpcResponse<dynamic>(id: request.id, result: result)
+            : JsonRpcResponse<dynamic>(
+                id: request.id,
+                error: _toJsonRpcError(handlerError),
+              );
+
+        await walletKit.respondSessionRequest(
+          topic: topic,
+          response: response,
+        );
       },
     );
   }
@@ -94,6 +100,13 @@ class CardanoRequestHandler {
     for (var index = pending.length - 1; index >= 0; index--) {
       final request = pending[index];
       if (request.topic == topic && request.method == method) {
+        return request;
+      }
+    }
+
+    for (var index = pending.length - 1; index >= 0; index--) {
+      final request = pending[index];
+      if (request.topic == topic) {
         return request;
       }
     }

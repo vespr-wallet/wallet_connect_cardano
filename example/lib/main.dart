@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'config.dart';
 import 'delegate/demo_wallet_delegate.dart';
+import 'ui/app_navigator.dart';
 import 'ui/home_screen.dart';
 import 'wallet/demo_wallet.dart';
 import 'wallet/wallet_connect_service.dart';
@@ -17,6 +18,7 @@ class ExampleWalletApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'WC Cardano Example',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0033AD)),

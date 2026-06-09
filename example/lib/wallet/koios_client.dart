@@ -57,11 +57,16 @@ class KoiosPreprodClient {
   /// Submits a signed transaction CBOR hex to preprod via Koios `/submittx`.
   Future<String> submitTxCborHex(String signedTxHex) async {
     final uri = Uri.parse('$baseUrl/submittx');
-    final response = await http.post(
-      uri,
-      headers: const <String, String>{'Content-Type': 'application/cbor'},
-      body: signedTxHex.hexDecode(),
-    );
+    final response = await http
+        .post(
+          uri,
+          headers: const <String, String>{'Content-Type': 'application/cbor'},
+          body: signedTxHex.hexDecode(),
+        )
+        .timeout(
+          const Duration(seconds: 45),
+          onTimeout: () => throw Exception('Koios submit timed out after 45s'),
+        );
 
     if (response.statusCode != 200 && response.statusCode != 202) {
       throw Exception(

@@ -5,6 +5,7 @@ import type { CardanoDappClient } from './wc-client';
 
 const UNSIGNED_TX_FIXTURE_PATH = '/fixtures/unsigned-tx.hex';
 const SIGN_DATA_PAYLOAD_HEX = '48656c6c6f2057616c6c6574436f6e6e656374';
+const CARDANOSCAN_PREPROD_TX_BASE = 'https://preprod.cardanoscan.io/transaction/';
 
 export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
   const statusEl = document.getElementById('status')!;
@@ -14,9 +15,13 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
   const uriTextarea = document.getElementById('wc-uri') as HTMLTextAreaElement;
   const sessionInfo = document.getElementById('session-info')!;
   const methodsSection = document.getElementById('methods-section')!;
+  const writeSection = document.getElementById('write-section')!;
+  const submitBtn = document.getElementById('btn-submit-tx') as HTMLButtonElement;
+  const txSuccessEl = document.getElementById('tx-success')!;
 
-  let cachedChangeAddressHex: string | null = null;
+  let cachedPaymentAddressHex: string | null = null;
   let cachedUnsignedTxHex: string | null = null;
+  let signedWitnessHex: string | null = null;
 
   client.setSessionListener((connected) => {
     updateConnectionUi(connected);
@@ -52,6 +57,7 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
       statusEl.className = 'status status-connected';
       connectBtn.textContent = 'Disconnect';
       methodsSection.classList.remove('hidden');
+      writeSection.classList.remove('hidden');
       sessionInfo.classList.remove('hidden');
       sessionInfo.innerHTML = `
         <p><strong>Chain:</strong> cip34:0-1 (preprod)</p>
@@ -64,8 +70,13 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
       statusEl.className = 'status status-idle';
       connectBtn.textContent = 'Connect via WalletConnect';
       methodsSection.classList.add('hidden');
+      writeSection.classList.add('hidden');
       sessionInfo.classList.add('hidden');
-      cachedChangeAddressHex = null;
+      txSuccessEl.classList.add('hidden');
+      txSuccessEl.innerHTML = '';
+      cachedPaymentAddressHex = null;
+      signedWitnessHex = null;
+      submitBtn.disabled = true;
     }
   }
 
@@ -79,6 +90,9 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
         logEl.textContent += `\nERROR (${method}): ${String(error)}\n`;
       } finally {
         btn.disabled = false;
+        if (method === 'cardano_signTx') {
+          submitBtn.disabled = signedWitnessHex == null;
+        }
       }
     });
   });
@@ -101,7 +115,9 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
     switch (method) {
       case 'cardano_signTx': {
         const txHex = await loadUnsignedTxFixture();
-        await client.signTx(txHex, false);
+        signedWitnessHex = await client.signTx(txHex, false);
+        submitBtn.disabled = false;
+        txSuccessEl.classList.add('hidden');
         break;
       }
       case 'cardano_signData': {
@@ -110,8 +126,16 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
         break;
       }
       case 'cardano_submitTx': {
+        if (!signedWitnessHex) {
+          throw new Error('Sign the transaction first with signTx');
+        }
+        txSuccessEl.classList.add('hidden');
+        txSuccessEl.innerHTML =
+          '<p><strong>Submitting transaction…</strong></p>';
+        txSuccessEl.classList.remove('hidden');
         const txHex = await loadUnsignedTxFixture();
-        await client.submitTx(txHex);
+        const txHash = await client.submitTx(txHex);
+        showTxSuccess(txHash);
         break;
       }
       default:
@@ -119,17 +143,27 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
     }
   }
 
+  function showTxSuccess(txHash: string): void {
+    const url = `${CARDANOSCAN_PREPROD_TX_BASE}${txHash}`;
+    txSuccessEl.innerHTML = `
+      <p><strong>Transaction submitted successfully</strong></p>
+      <p><code>${txHash}</code></p>
+      <p><a href="${url}" target="_blank" rel="noopener noreferrer">View on preprod Cardanoscan</a></p>
+    `;
+    txSuccessEl.classList.remove('hidden');
+  }
+
   async function resolvePaymentAddressHex(): Promise<string> {
-    if (cachedChangeAddressHex) return cachedChangeAddressHex;
+    if (cachedPaymentAddressHex) return cachedPaymentAddressHex;
     const used = await client.request<string[]>('cardano_getUsedAddresses');
     if (!used?.length) {
-      cachedChangeAddressHex = await client.request<string>(
+      cachedPaymentAddressHex = await client.request<string>(
         'cardano_getChangeAddress',
       );
     } else {
-      cachedChangeAddressHex = used[0]!;
+      cachedPaymentAddressHex = used[0]!;
     }
-    return cachedChangeAddressHex;
+    return cachedPaymentAddressHex;
   }
 
   async function loadUnsignedTxFixture(): Promise<string> {

@@ -111,7 +111,8 @@ export class CardanoDappClient {
       throw new Error('Not connected');
     }
 
-    const wireParams = params ?? [];
+    const wireParams: unknown[] =
+      params == null ? [] : Array.isArray(params) ? params : [params];
     this.log(`→ ${method}`, wireParams.length > 0 ? wireParams : undefined);
 
     const result = await this.client.request<T>({

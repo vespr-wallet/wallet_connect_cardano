@@ -125,6 +125,23 @@ button:disabled {
   background: color-mix(in srgb, CanvasText 6%, transparent);
 }
 
+.hint {
+  margin-top: 0;
+  opacity: 0.85;
+}
+
+.tx-success {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
+}
+
+.tx-success a {
+  color: var(--accent-muted);
+}
+
 .hidden {
   display: none !important;
 }

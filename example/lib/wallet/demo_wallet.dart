@@ -148,17 +148,6 @@ class DemoWallet {
   Future<String> submitSignedTransactionHex(String signedTxHex) =>
       koios.submitTxCborHex(signedTxHex);
 
-  /// Submits [txHex] to preprod. Signs first when the CBOR has no witnesses.
-  Future<String> submitTransactionHex(String txHex) async {
-    try {
-      return await submitSignedTransactionHex(txHex);
-    } catch (_) {
-      final unsigned = CardanoTransaction.deserializeFromHex(txHex);
-      final signed = await signAndSerializeTransaction(unsigned);
-      return submitSignedTransactionHex(signed);
-    }
-  }
-
   Future<CardanoDataSignature> signDataHex(
     String addressHex,
     String payloadHex,

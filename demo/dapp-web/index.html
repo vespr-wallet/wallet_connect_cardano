@@ -29,7 +29,7 @@
       </section>
 
       <section id="methods-section" class="card hidden">
-        <h2>2. CIP-30 methods</h2>
+        <h2>2. Read methods</h2>
         <div class="button-grid">
           <button type="button" data-method="cardano_getExtensions">getExtensions</button>
           <button type="button" data-method="cardano_getNetworkId">getNetworkId</button>
@@ -40,15 +40,27 @@
           <button type="button" data-method="cardano_getRewardAddresses">getRewardAddresses</button>
           <button type="button" data-method="cardano_getRewardAddress">getRewardAddress</button>
           <button type="button" data-method="cardano_getUtxos">getUtxos</button>
-          <button type="button" data-method="cardano_signTx">signTx</button>
-          <button type="button" data-method="cardano_signData">signData</button>
-          <button type="button" data-method="cardano_submitTx">submitTx</button>
           <button type="button" id="btn-run-read" class="primary">Run all read methods</button>
         </div>
       </section>
 
+      <section id="write-section" class="card hidden">
+        <h2>3. Sign &amp; submit</h2>
+        <p class="hint">
+          First sign the unsigned fixture transaction, then submit it on-chain.
+        </p>
+        <div class="button-grid">
+          <button type="button" id="btn-sign-tx" data-method="cardano_signTx">signTx</button>
+          <button type="button" id="btn-submit-tx" data-method="cardano_submitTx" disabled>
+            submitTx
+          </button>
+          <button type="button" data-method="cardano_signData">signData</button>
+        </div>
+        <div id="tx-success" class="tx-success hidden"></div>
+      </section>
+
       <section id="log-section" class="card">
-        <h2>3. Results log</h2>
+        <h2>4. Results log</h2>
         <pre id="log"></pre>
       </section>
     </div>

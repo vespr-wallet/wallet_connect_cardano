@@ -5,6 +5,7 @@ import 'package:reown_walletkit/reown_walletkit.dart';
 import 'package:wallet_connect_cardano/wallet_connect_cardano.dart';
 
 import '../delegate/demo_wallet_delegate.dart';
+import 'wallet_operation_status.dart';
 
 class RequestLogEntry {
   RequestLogEntry({required this.method, required this.timestamp});
@@ -27,6 +28,8 @@ class WalletConnectService {
   String? _connectedDappName;
   String? _activeSessionTopic;
   String? _lastError;
+  String? _lastSubmittedTxHash;
+  WalletOperationStatus? _operationStatus;
   bool _awaitingProposal = false;
 
   final StreamController<RequestLogEntry> _requestLogController =
@@ -45,6 +48,8 @@ class WalletConnectService {
   String? get connectedDappName => _connectedDappName;
   String? get activeSessionTopic => _activeSessionTopic;
   String? get lastError => _lastError;
+  String? get lastSubmittedTxHash => _lastSubmittedTxHash;
+  WalletOperationStatus? get operationStatus => _operationStatus;
   SessionProposalEvent? get pendingProposal => _pendingProposal;
 
   Future<void> initialize() async {
@@ -54,6 +59,39 @@ class WalletConnectService {
       _requestLogController.add(
         RequestLogEntry(method: method, timestamp: DateTime.now()),
       );
+    };
+    delegate.onOperationStarted = (method) {
+      _operationStatus = WalletOperationStatus(
+        method: method,
+        phase: WalletOperationPhase.processing,
+      );
+      _lastError = null;
+      _notify();
+    };
+    delegate.onOperationSucceeded = (method) {
+      if (method == 'cardano_submitTx') {
+        return;
+      }
+      _operationStatus = null;
+      _notify();
+    };
+    delegate.onOperationFailed = (method, error) {
+      _operationStatus = WalletOperationStatus(
+        method: method,
+        phase: WalletOperationPhase.failed,
+        message: error,
+      );
+      _lastError = error;
+      _notify();
+    };
+    delegate.onTransactionSubmitted = (txHash) {
+      _lastSubmittedTxHash = txHash;
+      _operationStatus = WalletOperationStatus(
+        method: 'cardano_submitTx',
+        phase: WalletOperationPhase.succeeded,
+        txHash: txHash,
+      );
+      _notify();
     };
 
     _sdk = WalletConnectCardano(
