@@ -13,65 +13,124 @@ class CardanoRequestHandler {
   /// Registers all CIP-30 handlers for the given [chainId]
   /// (e.g. `'cip34:1-764824073'`).
   void registerHandlers(IReownWalletKit walletKit, String chainId) {
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_getExtensions',
-      handler: _handleGetExtensions,
+    _register(walletKit, chainId, 'cardano_getExtensions', _handleGetExtensions);
+    _register(walletKit, chainId, 'cardano_getNetworkId', _handleGetNetworkId);
+    _register(walletKit, chainId, 'cardano_getBalance', _handleGetBalance);
+    _register(
+      walletKit,
+      chainId,
+      'cardano_getUsedAddresses',
+      _handleGetUsedAddresses,
     );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_getNetworkId',
-      handler: _handleGetNetworkId,
+    _register(
+      walletKit,
+      chainId,
+      'cardano_getUnusedAddresses',
+      _handleGetUnusedAddresses,
     );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_getBalance',
-      handler: _handleGetBalance,
+    _register(
+      walletKit,
+      chainId,
+      'cardano_getChangeAddress',
+      _handleGetChangeAddress,
     );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_getUsedAddresses',
-      handler: _handleGetUsedAddresses,
+    _register(
+      walletKit,
+      chainId,
+      'cardano_getRewardAddresses',
+      _handleGetRewardAddresses,
     );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_getUnusedAddresses',
-      handler: _handleGetUnusedAddresses,
+    _register(
+      walletKit,
+      chainId,
+      'cardano_getRewardAddress',
+      _handleGetRewardAddress,
     );
+    _register(walletKit, chainId, 'cardano_getUtxos', _handleGetUtxos);
+    _register(walletKit, chainId, 'cardano_signTx', _handleSignTx);
+    _register(walletKit, chainId, 'cardano_signData', _handleSignData);
+    _register(walletKit, chainId, 'cardano_submitTx', _handleSubmitTx);
+  }
+
+  void _register(
+    IReownWalletKit walletKit,
+    String chainId,
+    String method,
+    Future<dynamic> Function(String topic, dynamic params) handler,
+  ) {
     walletKit.registerRequestHandler(
       chainId: chainId,
-      method: 'cardano_getChangeAddress',
-      handler: _handleGetChangeAddress,
+      method: method,
+      handler: (String topic, dynamic params) async {
+        final request = _pendingRequest(walletKit, topic, method);
+        try {
+          final result = await handler(topic, params);
+          await walletKit.respondSessionRequest(
+            topic: topic,
+            response: JsonRpcResponse<dynamic>(
+              id: request.id,
+              result: result,
+            ),
+          );
+        } catch (error) {
+          await walletKit.respondSessionRequest(
+            topic: topic,
+            response: JsonRpcResponse<dynamic>(
+              id: request.id,
+              error: _toJsonRpcError(error),
+            ),
+          );
+        }
+      },
     );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_getRewardAddresses',
-      handler: _handleGetRewardAddresses,
-    );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_getRewardAddress',
-      handler: _handleGetRewardAddress,
-    );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_getUtxos',
-      handler: _handleGetUtxos,
-    );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_signTx',
-      handler: _handleSignTx,
-    );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_signData',
-      handler: _handleSignData,
-    );
-    walletKit.registerRequestHandler(
-      chainId: chainId,
-      method: 'cardano_submitTx',
-      handler: _handleSubmitTx,
+  }
+
+  SessionRequest _pendingRequest(
+    IReownWalletKit walletKit,
+    String topic,
+    String method,
+  ) {
+    final pending = walletKit.pendingRequests.getAll();
+    for (var index = pending.length - 1; index >= 0; index--) {
+      final request = pending[index];
+      if (request.topic == topic && request.method == method) {
+        return request;
+      }
+    }
+
+    if (pending.isEmpty) {
+      throw CardanoApiError(
+        code: CardanoApiError.internalError,
+        info: 'No pending WalletConnect request for $method',
+      );
+    }
+
+    return pending.last;
+  }
+
+  JsonRpcError _toJsonRpcError(Object error) {
+    if (error is CardanoApiError) {
+      return JsonRpcError(code: error.code, message: error.info);
+    }
+    if (error is CardanoDataSignError) {
+      return JsonRpcError(code: error.code, message: error.info);
+    }
+    if (error is CardanoPaginateError) {
+      return JsonRpcError(
+        code: CardanoApiError.invalidRequest,
+        message: 'PaginateError: maxSize ${error.maxSize}',
+      );
+    }
+    if (error is CardanoTxSendError) {
+      return JsonRpcError(code: error.code, message: error.info);
+    }
+    if (error is CardanoTxSignError) {
+      return JsonRpcError(code: error.code, message: error.info);
+    }
+
+    return JsonRpcError(
+      code: CardanoApiError.internalError,
+      message: error.toString(),
     );
   }
 
