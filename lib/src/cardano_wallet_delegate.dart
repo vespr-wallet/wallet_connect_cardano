@@ -32,6 +32,18 @@ abstract class CardanoWalletDelegate {
   /// or `null` if pagination has been exceeded.
   Future<List<String>?> getUtxos({String? amount, CardanoPaginate? paginate});
 
+  /// Returns UTXOs suitable for use as collateral.
+  ///
+  /// [amount] is the required collateral amount using the representation
+  /// defined by CIP-30. The returned entries are hex-encoded CBOR
+  /// `TransactionUnspentOutput` values, or `null` when suitable collateral is
+  /// unavailable.
+  ///
+  /// CIP-30 now deprecates this connector method in favor of dApps selecting
+  /// collateral from [getUtxos], but it remains supported for compatibility
+  /// with existing dApps.
+  Future<List<String>?> getCollateral({required String amount});
+
   /// Returns the total balance of the wallet as a hex-encoded CBOR `value`.
   ///
   /// The returned value encodes lovelace and any multi-asset amounts.

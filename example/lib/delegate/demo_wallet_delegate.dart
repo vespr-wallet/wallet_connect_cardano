@@ -92,6 +92,13 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
   }
 
   @override
+  Future<List<String>?> getCollateral({required String amount}) {
+    // The demo wallet has no dedicated collateral pool. Production wallets
+    // should return only UTXOs suitable for collateral.
+    return getUtxos(amount: amount);
+  }
+
+  @override
   Future<String> getBalance() => demoWallet.fetchBalanceCborHex();
 
   /// Account 0 / address index 0 payment (receive) address.
@@ -211,10 +218,7 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
     } catch (error) {
       final message = error.toString();
       onOperationFailed?.call('cardano_submitTx', message);
-      throw CardanoTxSendError(
-        code: CardanoTxSendError.failure,
-        info: message,
-      );
+      throw CardanoTxSendError(code: CardanoTxSendError.failure, info: message);
     }
   }
 

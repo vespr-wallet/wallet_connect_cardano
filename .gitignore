@@ -23,11 +23,11 @@ build/
 coverage/
 .coverage/
 
+# Generated API documentation
+doc/api/
+
 # Misc
 *.log
-
-# Sisyphus (local planning / agent tooling)
-.sisyphus/
 
 # Web dApp demo
 demo/dapp-web/node_modules/

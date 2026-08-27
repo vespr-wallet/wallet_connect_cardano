@@ -1,5 +1,7 @@
 # wallet_connect_cardano
 
+[![CI](https://github.com/vespr-wallet/wallet_connect_cardano/actions/workflows/ci.yml/badge.svg)](https://github.com/vespr-wallet/wallet_connect_cardano/actions/workflows/ci.yml)
+
 A WalletConnect v2 communication bridge for Cardano wallets, implementing [CIP-30](https://cips.cardano.org/cip/CIP-30) over the WalletConnect relay protocol.
 
 > **⚠️ This SDK is a transport layer, not a signing engine.** It routes CIP-30 JSON-RPC requests from dApps to your wallet app via callbacks. Your wallet app performs the actual signing, balance queries, and UTXO management.
@@ -22,7 +24,7 @@ Add `wallet_connect_cardano` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  wallet_connect_cardano: ^0.0.1
+  wallet_connect_cardano: ^0.1.0
 ```
 
 Then run:
@@ -57,6 +59,13 @@ class MyWalletDelegate implements CardanoWalletDelegate {
   }
 
   @override
+  Future<List<String>?> getCollateral({required String amount}) async {
+    // Return UTXOs suitable for the requested collateral amount.
+    // CIP-30 deprecates this method, but existing dApps may still call it.
+    return ['hex_encoded_collateral_utxo'];
+  }
+
+  @override
   Future<String> getBalance() async {
     // Return hex-encoded CBOR value (lovelace + multi-asset)
     return 'a1581c...'; // CBOR hex
@@ -65,25 +74,25 @@ class MyWalletDelegate implements CardanoWalletDelegate {
   @override
   Future<List<String>> getUsedAddresses({CardanoPaginate? paginate}) async {
     // Return list of hex-encoded payment addresses
-    return ['addr1qy2...', 'addr1qz3...'];
+    return ['01ab...', '01cd...'];
   }
 
   @override
   Future<List<String>> getUnusedAddresses() async {
     // Return list of hex-encoded unused payment addresses
-    return ['addr1qa4...'];
+    return ['01ef...'];
   }
 
   @override
   Future<String> getChangeAddress() async {
     // Return hex-encoded change address
-    return 'addr1qb5...';
+    return '01ab...';
   }
 
   @override
   Future<List<String>> getRewardAddresses() async {
     // Return list of hex-encoded reward (staking) addresses
-    return ['stake1u9...'];
+    return ['e1ab...'];
   }
 
   @override
@@ -184,12 +193,13 @@ final pairingInfo = await walletConnect.pair(uri: uri);
 
 ## CardanoWalletDelegate
 
-Your wallet app must implement all 11 methods of `CardanoWalletDelegate`:
+Your wallet app must implement all 12 methods of `CardanoWalletDelegate`:
 
 | Method | Parameters | Returns | Throws |
 |--------|-----------|---------|--------|
 | `getNetworkId()` | none | `int` (0=testnet, 1=mainnet) | — |
 | `getUtxos()` | `amount?`, `paginate?` | `List<String>?` (hex CBOR) | — |
+| `getCollateral()` | `amount` | `List<String>?` (hex CBOR) | `CardanoApiError` |
 | `getBalance()` | none | `String` (hex CBOR value) | — |
 | `getUsedAddresses()` | `paginate?` | `List<String>` (hex addresses) | — |
 | `getUnusedAddresses()` | none | `List<String>` (hex addresses) | — |
@@ -274,6 +284,7 @@ The SDK routes these CIP-30 JSON-RPC methods from dApps to your delegate:
 | `cardano_getNetworkId` | `getNetworkId()` | Get current network (0=testnet, 1=mainnet) |
 | `cardano_getBalance` | `getBalance()` | Get total wallet balance |
 | `cardano_getUtxos` | `getUtxos()` | Get unspent transaction outputs |
+| `cardano_getCollateral` | `getCollateral()` | Get suitable collateral UTXOs (deprecated by CIP-30) |
 | `cardano_getUsedAddresses` | `getUsedAddresses()` | Get addresses that have received funds |
 | `cardano_getUnusedAddresses` | `getUnusedAddresses()` | Get addresses that have never received funds |
 | `cardano_getChangeAddress` | `getChangeAddress()` | Get change address |
@@ -400,6 +411,24 @@ final walletConnect = WalletConnectCardano(
   delegate: delegate,
 );
 ```
+
+## Development
+
+The repository pins its Flutter toolchain in `.tool-versions`. Before opening a
+change:
+
+```bash
+flutter pub get
+dart format --output=none --set-exit-if-changed lib test example/lib/config.dart \
+  example/lib/delegate/demo_wallet_delegate.dart example/test
+dart analyze
+flutter test
+(cd example && flutter analyze && flutter test)
+(cd demo/dapp-web && npm ci && npm run build)
+dart pub publish --dry-run
+```
+
+The same checks run in GitHub Actions for every pull request.
 
 ## References
 

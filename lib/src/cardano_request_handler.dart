@@ -3,17 +3,24 @@ import 'package:reown_walletkit/reown_walletkit.dart';
 import 'cardano_wallet_delegate.dart';
 import 'models/models.dart';
 
-/// Registers all 12 CIP-30 JSON-RPC handlers on a [IReownWalletKit]
-/// instance, routing each incoming dApp request to the [CardanoWalletDelegate].
+/// Registers all 13 supported CIP-30 JSON-RPC handlers on an
+/// [IReownWalletKit] instance, routing each incoming dApp request to the
+/// [CardanoWalletDelegate].
 class CardanoRequestHandler {
   final CardanoWalletDelegate _delegate;
 
+  /// Creates a handler backed by the supplied wallet delegate.
   CardanoRequestHandler(this._delegate);
 
   /// Registers all CIP-30 handlers for the given [chainId]
   /// (e.g. `'cip34:1-764824073'`).
   void registerHandlers(IReownWalletKit walletKit, String chainId) {
-    _register(walletKit, chainId, 'cardano_getExtensions', _handleGetExtensions);
+    _register(
+      walletKit,
+      chainId,
+      'cardano_getExtensions',
+      _handleGetExtensions,
+    );
     _register(walletKit, chainId, 'cardano_getNetworkId', _handleGetNetworkId);
     _register(walletKit, chainId, 'cardano_getBalance', _handleGetBalance);
     _register(
@@ -47,6 +54,12 @@ class CardanoRequestHandler {
       _handleGetRewardAddress,
     );
     _register(walletKit, chainId, 'cardano_getUtxos', _handleGetUtxos);
+    _register(
+      walletKit,
+      chainId,
+      'cardano_getCollateral',
+      _handleGetCollateral,
+    );
     _register(walletKit, chainId, 'cardano_signTx', _handleSignTx);
     _register(walletKit, chainId, 'cardano_signData', _handleSignData);
     _register(walletKit, chainId, 'cardano_submitTx', _handleSubmitTx);
@@ -56,7 +69,7 @@ class CardanoRequestHandler {
     IReownWalletKit walletKit,
     String chainId,
     String method,
-    Future<dynamic> Function(String topic, dynamic params) handler,
+    Future<Object?> Function(String topic, Object? params) handler,
   ) {
     walletKit.registerRequestHandler(
       chainId: chainId,
@@ -68,7 +81,7 @@ class CardanoRequestHandler {
           method,
         );
         Object? handlerError;
-        dynamic result;
+        Object? result;
 
         try {
           result = await handler(topic, params);
@@ -83,10 +96,7 @@ class CardanoRequestHandler {
                 error: _toJsonRpcError(handlerError),
               );
 
-        await walletKit.respondSessionRequest(
-          topic: topic,
-          response: response,
-        );
+        await walletKit.respondSessionRequest(topic: topic, response: response);
       },
     );
   }
@@ -104,21 +114,10 @@ class CardanoRequestHandler {
       }
     }
 
-    for (var index = pending.length - 1; index >= 0; index--) {
-      final request = pending[index];
-      if (request.topic == topic) {
-        return request;
-      }
-    }
-
-    if (pending.isEmpty) {
-      throw CardanoApiError(
-        code: CardanoApiError.internalError,
-        info: 'No pending WalletConnect request for $method',
-      );
-    }
-
-    return pending.last;
+    throw CardanoApiError(
+      code: CardanoApiError.internalError,
+      info: 'No pending WalletConnect request for $method on topic $topic',
+    );
   }
 
   JsonRpcError _toJsonRpcError(Object error) {
@@ -147,18 +146,28 @@ class CardanoRequestHandler {
     );
   }
 
-  T? _param<T>(dynamic params, int index, String key) {
-    if (params is List && params.length > index && params[index] != null) {
-      return params[index] as T?;
+  T? _param<T>(Object? params, int index, String key) {
+    Object? value;
+    if (params is List && params.length > index) {
+      value = params[index];
+    } else if (params is Map) {
+      value = params[key];
     }
-    if (params is Map && params[key] != null) {
-      return params[key] as T?;
+
+    if (value == null) {
+      return null;
     }
-    return null;
+    if (value is! T) {
+      throw CardanoApiError(
+        code: CardanoApiError.invalidRequest,
+        info: 'Invalid parameter type for: $key',
+      );
+    }
+    return value as T;
   }
 
-  T _requiredParam<T>(dynamic params, int index, String key) {
-    final dynamic value = _param<dynamic>(params, index, key);
+  T _requiredParam<T>(Object? params, int index, String key) {
+    final Object? value = _param<Object?>(params, index, key);
     if (value == null) {
       throw CardanoApiError(
         code: CardanoApiError.invalidRequest,
@@ -171,14 +180,49 @@ class CardanoRequestHandler {
         info: 'Invalid parameter type for: $key',
       );
     }
-    return value;
+    return value as T;
   }
 
-  CardanoPaginate? _paginateFromParam(dynamic value) {
-    if (value is Map) {
-      return CardanoPaginate.fromJson(Map<String, dynamic>.from(value));
+  CardanoPaginate? _paginateFromParam(Object? value) {
+    if (value == null) {
+      return null;
     }
-    return null;
+    if (value is! Map) {
+      throw const CardanoApiError(
+        code: CardanoApiError.invalidRequest,
+        info: 'Invalid parameter type for: paginate',
+      );
+    }
+
+    final Object? page = value['page'];
+    final Object? limit = value['limit'];
+    if (page is! int || limit is! int || page < 0 || limit <= 0) {
+      throw const CardanoApiError(
+        code: CardanoApiError.invalidRequest,
+        info: 'paginate requires page >= 0 and limit > 0',
+      );
+    }
+    return CardanoPaginate(page: page, limit: limit);
+  }
+
+  String _collateralAmount(Object? params) {
+    Object? amount = _param<Object?>(params, 0, 'amount');
+    if (amount is Map) {
+      amount = amount['amount'];
+    }
+    if (amount == null) {
+      throw const CardanoApiError(
+        code: CardanoApiError.invalidRequest,
+        info: 'Missing required parameter: amount',
+      );
+    }
+    if (amount is! String) {
+      throw const CardanoApiError(
+        code: CardanoApiError.invalidRequest,
+        info: 'Invalid parameter type for: amount',
+      );
+    }
+    return amount;
   }
 
   Future<T> _execute<T>(Future<T> Function() action) async {
@@ -202,9 +246,9 @@ class CardanoRequestHandler {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _handleGetExtensions(
+  Future<List<Map<String, Object>>> _handleGetExtensions(
     String topic,
-    dynamic params,
+    Object? params,
   ) {
     return _execute(() async {
       final extensions = await _delegate.getExtensions();
@@ -212,51 +256,63 @@ class CardanoRequestHandler {
     });
   }
 
-  Future<int> _handleGetNetworkId(String topic, dynamic params) {
+  Future<int> _handleGetNetworkId(String topic, Object? params) {
     return _execute(() => _delegate.getNetworkId());
   }
 
-  Future<String> _handleGetBalance(String topic, dynamic params) {
+  Future<String> _handleGetBalance(String topic, Object? params) {
     return _execute(() => _delegate.getBalance());
   }
 
-  Future<List<String>> _handleGetUsedAddresses(String topic, dynamic params) {
+  Future<List<String>> _handleGetUsedAddresses(String topic, Object? params) {
     return _execute(() async {
-      final dynamic paginateParam = _param<dynamic>(params, 0, 'paginate');
+      final Object? paginateParam = _param<Object?>(params, 0, 'paginate');
       final CardanoPaginate? paginate = _paginateFromParam(paginateParam);
       return _delegate.getUsedAddresses(paginate: paginate);
     });
   }
 
-  Future<List<String>> _handleGetUnusedAddresses(String topic, dynamic params) {
+  Future<List<String>> _handleGetUnusedAddresses(String topic, Object? params) {
     return _execute(() => _delegate.getUnusedAddresses());
   }
 
-  Future<String> _handleGetChangeAddress(String topic, dynamic params) {
+  Future<String> _handleGetChangeAddress(String topic, Object? params) {
     return _execute(() => _delegate.getChangeAddress());
   }
 
-  Future<List<String>> _handleGetRewardAddresses(String topic, dynamic params) {
+  Future<List<String>> _handleGetRewardAddresses(String topic, Object? params) {
     return _execute(() => _delegate.getRewardAddresses());
   }
 
-  Future<String> _handleGetRewardAddress(String topic, dynamic params) {
+  Future<String> _handleGetRewardAddress(String topic, Object? params) {
     return _execute(() async {
       final rewardAddresses = await _delegate.getRewardAddresses();
-      return rewardAddresses.isNotEmpty ? rewardAddresses.first : '';
+      if (rewardAddresses.isEmpty) {
+        throw const CardanoApiError(
+          code: CardanoApiError.internalError,
+          info: 'Wallet returned no reward addresses',
+        );
+      }
+      return rewardAddresses.first;
     });
   }
 
-  Future<List<String>?> _handleGetUtxos(String topic, dynamic params) {
+  Future<List<String>?> _handleGetUtxos(String topic, Object? params) {
     return _execute(() {
       final String? amount = _param<String>(params, 0, 'amount');
-      final dynamic paginateParam = _param<dynamic>(params, 1, 'paginate');
+      final Object? paginateParam = _param<Object?>(params, 1, 'paginate');
       final CardanoPaginate? paginate = _paginateFromParam(paginateParam);
       return _delegate.getUtxos(amount: amount, paginate: paginate);
     });
   }
 
-  Future<String> _handleSignTx(String topic, dynamic params) {
+  Future<List<String>?> _handleGetCollateral(String topic, Object? params) {
+    return _execute(() {
+      return _delegate.getCollateral(amount: _collateralAmount(params));
+    });
+  }
+
+  Future<String> _handleSignTx(String topic, Object? params) {
     return _execute(() {
       final String tx = _requiredParam<String>(params, 0, 'tx');
       final bool partialSign = _param<bool>(params, 1, 'partialSign') ?? false;
@@ -264,7 +320,7 @@ class CardanoRequestHandler {
     });
   }
 
-  Future<Map<String, dynamic>> _handleSignData(String topic, dynamic params) {
+  Future<Map<String, Object>> _handleSignData(String topic, Object? params) {
     return _execute(() async {
       final String address = _requiredParam<String>(params, 0, 'address');
       final String payload = _requiredParam<String>(params, 1, 'payload');
@@ -273,7 +329,7 @@ class CardanoRequestHandler {
     });
   }
 
-  Future<String> _handleSubmitTx(String topic, dynamic params) {
+  Future<String> _handleSubmitTx(String topic, Object? params) {
     return _execute(() {
       final String tx = _requiredParam<String>(params, 0, 'tx');
       return _delegate.submitTx(tx);

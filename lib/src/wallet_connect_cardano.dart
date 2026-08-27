@@ -28,6 +28,7 @@ class WalletConnectCardano {
     'cardano_getRewardAddresses',
     'cardano_getRewardAddress',
     'cardano_getUtxos',
+    'cardano_getCollateral',
     'cardano_signTx',
     'cardano_signData',
     'cardano_submitTx',
@@ -54,58 +55,97 @@ class WalletConnectCardano {
   /// Defaults to [mainnet].
   final List<String> chainIds;
 
-  late final IReownWalletKit _walletKit;
-  late final CardanoRequestHandler _requestHandler;
+  IReownWalletKit? _walletKit;
+  late final CardanoRequestHandler _requestHandler = CardanoRequestHandler(
+    delegate,
+  );
+  Future<void>? _initialization;
+  bool _initialized = false;
 
   /// Creates a WalletConnect Cardano SDK instance.
+  ///
+  /// An existing [walletKit] may be supplied when the application already owns
+  /// a WalletKit instance. The SDK still registers its Cardano handlers when
+  /// [initialize] is called.
   WalletConnectCardano({
     required this.projectId,
     required this.metadata,
     required this.delegate,
     List<String>? chainIds,
-  }) : chainIds = chainIds ?? <String>[mainnet];
+    IReownWalletKit? walletKit,
+  }) : chainIds = List<String>.unmodifiable(
+         chainIds ?? const <String>[mainnet],
+       ),
+       _walletKit = walletKit {
+    if (this.chainIds.isEmpty) {
+      throw ArgumentError.value(chainIds, 'chainIds', 'must not be empty');
+    }
+  }
+
+  /// Whether [initialize] has completed successfully.
+  bool get isInitialized => _initialized;
 
   /// The underlying WalletKit instance for advanced integration use-cases.
-  IReownWalletKit get walletKit => _walletKit;
+  ///
+  /// Throws a [StateError] until [initialize] completes.
+  IReownWalletKit get walletKit {
+    if (!_initialized || _walletKit == null) {
+      throw StateError('Call initialize() before using WalletConnectCardano');
+    }
+    return _walletKit!;
+  }
 
   /// Emits when a dApp proposes a new WalletConnect session.
   Event<SessionProposalEvent> get onSessionProposal =>
-      _walletKit.onSessionProposal;
+      walletKit.onSessionProposal;
 
   /// Emits when a session proposal cannot be satisfied (e.g. namespace mismatch).
   Event<SessionProposalErrorEvent> get onSessionProposalError =>
-      _walletKit.onSessionProposalError;
+      walletKit.onSessionProposalError;
 
   /// Emits when a dApp sends a session authentication request.
   Event<SessionAuthRequest> get onSessionAuthRequest =>
-      _walletKit.onSessionAuthRequest;
+      walletKit.onSessionAuthRequest;
 
   /// Initializes WalletKit and registers Cardano request and event handlers.
   ///
-  /// Must be called before calling [pair], [approveSession], or event emitters.
-  Future<void> initialize() async {
-    _walletKit = await ReownWalletKit.createInstance(
-      projectId: projectId,
-      metadata: metadata,
-    );
-    _requestHandler = CardanoRequestHandler(delegate);
+  /// Concurrent and repeated calls share the same initialization and do not
+  /// register duplicate handlers.
+  Future<void> initialize() {
+    if (_initialized) {
+      return Future<void>.value();
+    }
+    return _initialization ??= _initialize().whenComplete(() {
+      _initialization = null;
+    });
+  }
+
+  Future<void> _initialize() async {
+    final IReownWalletKit walletKit =
+        _walletKit ??
+        await ReownWalletKit.createInstance(
+          projectId: projectId,
+          metadata: metadata,
+        );
+    _walletKit = walletKit;
 
     for (final String chainId in chainIds) {
-      _requestHandler.registerHandlers(_walletKit, chainId);
-      _walletKit.registerEventEmitter(chainId: chainId, event: 'chainChanged');
-      _walletKit.registerEventEmitter(
+      _requestHandler.registerHandlers(walletKit, chainId);
+      walletKit.registerEventEmitter(chainId: chainId, event: 'chainChanged');
+      walletKit.registerEventEmitter(
         chainId: chainId,
         event: 'accountsChanged',
       );
-      _walletKit.registerEventEmitter(
+      walletKit.registerEventEmitter(
         chainId: chainId,
         event: 'cardano_onNetworkChange',
       );
-      _walletKit.registerEventEmitter(
+      walletKit.registerEventEmitter(
         chainId: chainId,
         event: 'cardano_onAccountChange',
       );
     }
+    _initialized = true;
   }
 
   /// Registers a wallet account for [chainId].
@@ -116,14 +156,11 @@ class WalletConnectCardano {
     required String chainId,
     required String accountAddress,
   }) {
-    _walletKit.registerAccount(
-      chainId: chainId,
-      accountAddress: accountAddress,
-    );
+    walletKit.registerAccount(chainId: chainId, accountAddress: accountAddress);
   }
 
   /// Pairs with a dApp using a WalletConnect URI.
-  Future<PairingInfo> pair({required Uri uri}) => _walletKit.pair(uri: uri);
+  Future<PairingInfo> pair({required Uri uri}) => walletKit.pair(uri: uri);
 
   /// Approves a pending session proposal and creates a Cardano session.
   ///
@@ -136,21 +173,17 @@ class WalletConnectCardano {
     String? chainId,
     Map<String, Namespace>? namespaces,
   }) {
-    final Map<String, Namespace> approvedNamespaces = namespaces ??
+    final Map<String, Namespace> approvedNamespaces =
+        namespaces ??
         <String, Namespace>{
           'cip34': Namespace(
-            accounts: <String>[
-              '${chainId ?? chainIds.first}:$accountAddress',
-            ],
+            accounts: <String>['${chainId ?? chainIds.first}:$accountAddress'],
             methods: _cip30Methods,
             events: _sessionEvents,
           ),
         };
 
-    return _walletKit.approveSession(
-      id: id,
-      namespaces: approvedNamespaces,
-    );
+    return walletKit.approveSession(id: id, namespaces: approvedNamespaces);
   }
 
   /// Rejects a pending session proposal.
@@ -158,7 +191,7 @@ class WalletConnectCardano {
     required int id,
     required ReownSignError reason,
   }) {
-    return _walletKit.rejectSession(id: id, reason: reason);
+    return walletKit.rejectSession(id: id, reason: reason);
   }
 
   /// Disconnects an active session by topic.
@@ -166,12 +199,11 @@ class WalletConnectCardano {
     required String topic,
     required ReownSignError reason,
   }) {
-    return _walletKit.disconnectSession(topic: topic, reason: reason);
+    return walletKit.disconnectSession(topic: topic, reason: reason);
   }
 
   /// Returns all currently active sessions.
-  Map<String, SessionData> getActiveSessions() =>
-      _walletKit.getActiveSessions();
+  Map<String, SessionData> getActiveSessions() => walletKit.getActiveSessions();
 
   /// Emits account change events using both common ecosystem conventions.
   Future<void> emitAccountChange({
@@ -179,13 +211,13 @@ class WalletConnectCardano {
     required String chainId,
     required String newAddress,
   }) async {
-    await _walletKit.emitSessionEvent(
+    await walletKit.emitSessionEvent(
       topic: topic,
       chainId: chainId,
       event: SessionEventParams(name: 'accountsChanged', data: newAddress),
     );
 
-    await _walletKit.emitSessionEvent(
+    await walletKit.emitSessionEvent(
       topic: topic,
       chainId: chainId,
       event: SessionEventParams(
@@ -200,13 +232,13 @@ class WalletConnectCardano {
     required String topic,
     required String newChainId,
   }) async {
-    await _walletKit.emitSessionEvent(
+    await walletKit.emitSessionEvent(
       topic: topic,
       chainId: newChainId,
       event: SessionEventParams(name: 'chainChanged', data: newChainId),
     );
 
-    await _walletKit.emitSessionEvent(
+    await walletKit.emitSessionEvent(
       topic: topic,
       chainId: newChainId,
       event: SessionEventParams(

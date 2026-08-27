@@ -4,6 +4,7 @@
 class CardanoPaginate {
   /// The page number (zero-indexed).
   final int page;
+
   /// The maximum number of items per page.
   final int limit;
 
@@ -11,10 +12,13 @@ class CardanoPaginate {
   const CardanoPaginate({required this.page, required this.limit});
 
   /// Serializes this to a JSON-compatible map.
-  Map<String, dynamic> toJson() => {'page': page, 'limit': limit};
+  Map<String, Object> toJson() => <String, Object>{
+    'page': page,
+    'limit': limit,
+  };
 
   /// Deserializes a [CardanoPaginate] from a JSON map.
-  factory CardanoPaginate.fromJson(Map<String, dynamic> json) =>
+  factory CardanoPaginate.fromJson(Map<String, Object?> json) =>
       CardanoPaginate(page: json['page'] as int, limit: json['limit'] as int);
 
   @override

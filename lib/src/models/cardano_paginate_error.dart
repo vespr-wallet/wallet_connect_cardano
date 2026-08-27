@@ -9,10 +9,10 @@ class CardanoPaginateError implements Exception {
   const CardanoPaginateError({required this.maxSize});
 
   /// Serializes this error to a JSON-compatible map.
-  Map<String, dynamic> toJson() => {'maxSize': maxSize};
+  Map<String, Object> toJson() => <String, Object>{'maxSize': maxSize};
 
   /// Deserializes a [CardanoPaginateError] from a JSON map.
-  factory CardanoPaginateError.fromJson(Map<String, dynamic> json) =>
+  factory CardanoPaginateError.fromJson(Map<String, Object?> json) =>
       CardanoPaginateError(maxSize: json['maxSize'] as int);
 
   @override

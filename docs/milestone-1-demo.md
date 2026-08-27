@@ -37,11 +37,11 @@ Fund via the [Cardano preprod faucet](https://docs.cardano.org/cardano-testnet/t
 
 ```bash
 cd demo/dapp-web
+cp .env.example .env
+# Set VITE_REOWN_PROJECT_ID in .env
 npm install
 npm run dev
 ```
-
-(Optional: `cp .env.example .env` to override the default Reown project ID.)
 
 Open `http://localhost:5173` on your desktop browser.
 
@@ -95,7 +95,7 @@ flutter run
 | `signTx` fails — no UTXOs | Fund wallet via preprod faucet |
 | Submit fails — UTXO already spent | Re-run **signTx** (wallet picks fresh UTXOs) |
 | Missing `unsigned-tx.hex` on web | Run `generate_fixture.dart` (placeholder only) |
-| Pairing hangs | Both sides use project ID `310c52e0709fb044854ca181562678f8`; check network |
+| Pairing hangs | Confirm both sides use the same Reown project ID and check network connectivity |
 | Empty balance/UTXOs | Confirm faucet sent to the address shown in the app |
 | Koios errors | Retry; API is `https://preprod.koios.rest/api/v1` |
 

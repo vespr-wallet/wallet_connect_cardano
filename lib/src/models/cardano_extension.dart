@@ -9,10 +9,10 @@ class CardanoExtension {
   const CardanoExtension({required this.cip});
 
   /// Serializes this to a JSON-compatible map.
-  Map<String, dynamic> toJson() => {'cip': cip};
+  Map<String, Object> toJson() => <String, Object>{'cip': cip};
 
   /// Deserializes a [CardanoExtension] from a JSON map.
-  factory CardanoExtension.fromJson(Map<String, dynamic> json) =>
+  factory CardanoExtension.fromJson(Map<String, Object?> json) =>
       CardanoExtension(cip: json['cip'] as int);
 
   @override

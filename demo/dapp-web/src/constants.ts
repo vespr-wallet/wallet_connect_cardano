@@ -1,5 +1,6 @@
 /** Reown / WalletConnect Cloud project ID (https://cloud.reown.com). */
-export const REOWN_PROJECT_ID = '310c52e0709fb044854ca181562678f8';
+export const REOWN_PROJECT_ID =
+  import.meta.env.VITE_REOWN_PROJECT_ID?.trim() ?? '';
 
 /** Preprod chain ID per CIP-34. */
 export const PREPROD_CHAIN_ID = 'cip34:0-1';
@@ -15,6 +16,7 @@ export const CIP30_METHODS = [
   'cardano_getRewardAddresses',
   'cardano_getRewardAddress',
   'cardano_getUtxos',
+  'cardano_getCollateral',
   'cardano_signTx',
   'cardano_signData',
   'cardano_submitTx',
@@ -37,4 +39,5 @@ export const READ_METHODS = [
   'cardano_getRewardAddresses',
   'cardano_getRewardAddress',
   'cardano_getUtxos',
+  'cardano_getCollateral',
 ] as const;

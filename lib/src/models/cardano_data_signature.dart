@@ -4,6 +4,7 @@
 class CardanoDataSignature {
   /// Hex-encoded CBOR of COSE_Sign1.
   final String signature;
+
   /// Hex-encoded CBOR of COSE_Key.
   final String key;
 
@@ -11,10 +12,13 @@ class CardanoDataSignature {
   const CardanoDataSignature({required this.signature, required this.key});
 
   /// Serializes this to a JSON-compatible map.
-  Map<String, dynamic> toJson() => {'signature': signature, 'key': key};
+  Map<String, Object> toJson() => <String, Object>{
+    'signature': signature,
+    'key': key,
+  };
 
   /// Deserializes a [CardanoDataSignature] from a JSON map.
-  factory CardanoDataSignature.fromJson(Map<String, dynamic> json) =>
+  factory CardanoDataSignature.fromJson(Map<String, Object?> json) =>
       CardanoDataSignature(
         signature: json['signature'] as String,
         key: json['key'] as String,
