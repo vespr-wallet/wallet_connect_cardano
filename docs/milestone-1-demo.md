@@ -69,7 +69,7 @@ flutter run -t tool/e2e_transfer_test.dart -d macos --release
 
 ```bash
 cd example
-flutter run
+flutter run --dart-define=REOWN_PROJECT_ID=<same project ID used in .env>
 ```
 
 ## Demo flow (video script ~3 min)

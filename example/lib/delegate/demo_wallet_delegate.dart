@@ -92,10 +92,15 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
   }
 
   @override
-  Future<List<String>?> getCollateral({required String amount}) {
-    // The demo wallet has no dedicated collateral pool. Production wallets
-    // should return only UTXOs suitable for collateral.
-    return getUtxos(amount: amount);
+  Future<List<String>?> getCollateral({required String amount}) async {
+    try {
+      return await demoWallet.fetchCollateralCborHexList(amount);
+    } on FormatException catch (error) {
+      throw CardanoApiError(
+        code: CardanoApiError.invalidRequest,
+        info: error.message,
+      );
+    }
   }
 
   @override

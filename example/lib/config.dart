@@ -18,5 +18,6 @@ class AppConfig {
         'patrol fetch',
   );
 
-  static bool get hasReownProjectId => reownProjectId.isNotEmpty;
+  static bool get hasReownProjectId =>
+      reownProjectId.isNotEmpty && reownProjectId != 'your_project_id';
 }

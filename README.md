@@ -420,7 +420,8 @@ change:
 ```bash
 flutter pub get
 dart format --output=none --set-exit-if-changed lib test example/lib/config.dart \
-  example/lib/delegate/demo_wallet_delegate.dart example/test
+  example/lib/delegate/demo_wallet_delegate.dart \
+  example/lib/wallet/demo_wallet.dart example/test
 dart analyze
 flutter test
 (cd example && flutter analyze && flutter test)

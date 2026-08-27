@@ -45,6 +45,83 @@ class DemoWallet {
     return utxos.map(_koiosUtxoToCborHex).toList();
   }
 
+  /// Returns up to three lovelace-only UTXOs that cover [amountCborHex].
+  Future<List<String>?> fetchCollateralCborHexList(String amountCborHex) async {
+    final requiredLovelace = decodeCollateralAmount(amountCborHex);
+    final utxos = await koios.getAddressUtxos(paymentAddressBech32);
+    final selected = selectCollateralUtxos(
+      utxos: utxos,
+      requiredLovelace: requiredLovelace,
+    );
+    return selected?.map(_koiosUtxoToCborHex).toList();
+  }
+
+  /// Decodes the CIP-30 `cbor<Coin>` collateral amount.
+  static BigInt decodeCollateralAmount(String amountCborHex) {
+    try {
+      final decoded = cbor.decode(amountCborHex.hexDecode());
+      if (decoded is CborInt) {
+        final amount = decoded.toBigInt();
+        if (amount > BigInt.zero) {
+          return amount;
+        }
+      }
+    } catch (_) {
+      // Normalize malformed hex and CBOR into one public validation error.
+    }
+    throw const FormatException(
+      'Collateral amount must be a positive CBOR integer',
+    );
+  }
+
+  /// Selects lovelace-only Koios UTXOs covering [requiredLovelace].
+  ///
+  /// Prefers the smallest single qualifying UTXO. When no single UTXO covers
+  /// the amount, combines the largest available entries up to Cardano's
+  /// three-collateral-input protocol limit.
+  static List<Map<String, dynamic>>? selectCollateralUtxos({
+    required List<Map<String, dynamic>> utxos,
+    required BigInt requiredLovelace,
+  }) {
+    if (requiredLovelace <= BigInt.zero) {
+      throw ArgumentError.value(
+        requiredLovelace,
+        'requiredLovelace',
+        'must be positive',
+      );
+    }
+
+    final candidates = <({Map<String, dynamic> utxo, BigInt lovelace})>[];
+    for (final utxo in utxos) {
+      final assetList = utxo['asset_list'];
+      final lovelace = BigInt.tryParse(utxo['value'] as String? ?? '');
+      if (assetList is List && assetList.isEmpty && lovelace != null) {
+        candidates.add((utxo: utxo, lovelace: lovelace));
+      }
+    }
+    candidates.sort((left, right) => left.lovelace.compareTo(right.lovelace));
+
+    for (final candidate in candidates) {
+      if (candidate.lovelace >= requiredLovelace) {
+        return <Map<String, dynamic>>[candidate.utxo];
+      }
+    }
+
+    final selected = <Map<String, dynamic>>[];
+    var selectedLovelace = BigInt.zero;
+    for (final candidate in candidates.reversed) {
+      selected.add(candidate.utxo);
+      selectedLovelace += candidate.lovelace;
+      if (selectedLovelace >= requiredLovelace) {
+        return selected;
+      }
+      if (selected.length == 3) {
+        break;
+      }
+    }
+    return null;
+  }
+
   String _koiosUtxoToCborHex(Map<String, dynamic> utxo) {
     final txHash = utxo['tx_hash'] as String;
     final txIndex = utxo['tx_index'] as int;
@@ -85,7 +162,9 @@ class DemoWallet {
       final assetNameHex = item['asset_name'] as String? ?? '';
       final quantity = BigInt.parse(item['quantity'] as String);
 
-      byPolicy.putIfAbsent(policyId, () => <Asset>[]).add(
+      byPolicy
+          .putIfAbsent(policyId, () => <Asset>[])
+          .add(
             Asset(
               assetName: AssetName.fromHex(assetNameHex),
               value: quantity.toCborInt(),
@@ -109,8 +188,9 @@ class DemoWallet {
       return Value.v0(lovelace: BigInt.zero.toCborInt()).serializeHexString();
     }
 
-    return Value.v0(lovelace: BigInt.parse(balance).toCborInt())
-        .serializeHexString();
+    return Value.v0(
+      lovelace: BigInt.parse(balance).toCborInt(),
+    ).serializeHexString();
   }
 
   Future<String> signTransactionHex(String unsignedTxHex) async {
@@ -166,7 +246,9 @@ class DemoWallet {
     return Utxo.deserializeHex(_koiosUtxoToCborHex(utxo));
   }
 
-  Future<String> signAndSerializeTransaction(CardanoTransaction unsignedTx) async {
+  Future<String> signAndSerializeTransaction(
+    CardanoTransaction unsignedTx,
+  ) async {
     final witnessSet = await wallet.signTransaction(
       tx: unsignedTx,
       witnessBech32Addresses: <String>{paymentAddressBech32},

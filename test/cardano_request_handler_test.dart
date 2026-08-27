@@ -282,8 +282,8 @@ void main() {
       ),
     );
 
-    expect(
-      () => walletKit.handlers['cardano_getBalance']!(topic, const <Object?>[]),
+    await expectLater(
+      walletKit.handlers['cardano_getBalance']!(topic, const <Object?>[]),
       throwsA(
         isA<CardanoApiError>().having(
           (error) => error.code,

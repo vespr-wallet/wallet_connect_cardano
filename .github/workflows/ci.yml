@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -35,7 +37,8 @@ jobs:
         run: >-
           dart format --output=none --set-exit-if-changed
           lib test example/lib/config.dart
-          example/lib/delegate/demo_wallet_delegate.dart example/test
+          example/lib/delegate/demo_wallet_delegate.dart
+          example/lib/wallet/demo_wallet.dart example/test
 
       - name: Analyze SDK
         run: dart analyze
@@ -63,6 +66,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
