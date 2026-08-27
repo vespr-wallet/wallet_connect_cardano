@@ -2,11 +2,7 @@ import { REOWN_PROJECT_ID } from './constants';
 import { setupUi } from './ui';
 import { CardanoDappClient } from './wc-client';
 
-const envProjectId = import.meta.env.VITE_REOWN_PROJECT_ID as string | undefined;
-const projectId =
-  envProjectId && envProjectId !== 'your_project_id_here'
-    ? envProjectId
-    : REOWN_PROJECT_ID;
+const projectId = REOWN_PROJECT_ID;
 const logEl = document.getElementById('log')!;
 
 function appendLog(message: string, data?: unknown): void {
@@ -19,6 +15,12 @@ function appendLog(message: string, data?: unknown): void {
 }
 
 async function main(): Promise<void> {
+  if (!projectId || projectId === 'your_project_id_here') {
+    appendLog(
+      'Set VITE_REOWN_PROJECT_ID in demo/dapp-web/.env before connecting',
+    );
+    return;
+  }
   const client = new CardanoDappClient(appendLog);
   await client.init(projectId);
   setupUi(client, logEl);

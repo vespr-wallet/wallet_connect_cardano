@@ -39,7 +39,7 @@ export class CardanoDappClient {
       projectId,
       metadata: {
         name: 'WC Cardano dApp Demo',
-        description: 'Milestone 1 test dApp for wallet_connect_cardano',
+        description: 'CIP-30 test dApp for wallet_connect_cardano',
         url: 'https://github.com/vespr-wallet/wallet_connect_cardano',
         icons: ['https://vespr.xyz/favicon.ico'],
       },
@@ -135,6 +135,12 @@ export class CardanoDappClient {
 
   async getNetworkId(): Promise<number> {
     return this.request<number>('cardano_getNetworkId');
+  }
+
+  async getCollateral(amount: string): Promise<string[] | null> {
+    return this.request<string[] | null>('cardano_getCollateral', [
+      { amount },
+    ]);
   }
 
   async signTx(unsignedTxHex: string, partialSign = false): Promise<string> {

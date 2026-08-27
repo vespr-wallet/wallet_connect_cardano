@@ -5,12 +5,14 @@ Flutter demo wallet for Milestone 1 evidence. Uses [`wallet_connect_cardano`](..
 ## Run
 
 ```bash
-flutter run
+flutter run --dart-define=REOWN_PROJECT_ID=your_project_id
 ```
 
-A default Reown project ID is baked in; override with `--dart-define=REOWN_PROJECT_ID=...` if needed.
+Create a project ID at [Reown Cloud](https://cloud.reown.com). The repository
+does not contain a default project ID.
 
-Pair with the web dApp in [`demo/dapp-web/`](../demo/dapp-web/). See [`docs/milestone-1-demo.md`](../docs/milestone-1-demo.md).
+Pair with the web dApp in [`demo/dapp-web/`](../demo/dapp-web/). See
+[`docs/milestone-1-demo.md`](../docs/milestone-1-demo.md).
 
 ## Optional defines
 

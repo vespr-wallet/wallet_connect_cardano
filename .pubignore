@@ -1,0 +1,32 @@
+# Local and generated files
+.dart_tool/
+.packages
+.pub/
+build/
+coverage/
+doc/api/
+pubspec.lock
+
+# Repository automation and planning
+.github/
+.sisyphus/
+.tool-versions
+AGENTS.md
+
+# IDE and operating system files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Catalyst evidence and the standalone web demo are not package assets
+demo/
+docs/
+
+# Nested generated files
+example/.dart_tool/
+example/build/
+example/coverage/
+example/.flutter-plugins
+example/.flutter-plugins-dependencies

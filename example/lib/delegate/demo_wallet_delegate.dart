@@ -92,6 +92,18 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
   }
 
   @override
+  Future<List<String>?> getCollateral({required String amount}) async {
+    try {
+      return await demoWallet.fetchCollateralCborHexList(amount);
+    } on FormatException catch (error) {
+      throw CardanoApiError(
+        code: CardanoApiError.invalidRequest,
+        info: error.message,
+      );
+    }
+  }
+
+  @override
   Future<String> getBalance() => demoWallet.fetchBalanceCborHex();
 
   /// Account 0 / address index 0 payment (receive) address.
@@ -211,10 +223,7 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
     } catch (error) {
       final message = error.toString();
       onOperationFailed?.call('cardano_submitTx', message);
-      throw CardanoTxSendError(
-        code: CardanoTxSendError.failure,
-        info: message,
-      );
+      throw CardanoTxSendError(code: CardanoTxSendError.failure, info: message);
     }
   }
 

@@ -6,6 +6,7 @@ import type { CardanoDappClient } from './wc-client';
 const UNSIGNED_TX_FIXTURE_PATH = '/fixtures/unsigned-tx.hex';
 const SIGN_DATA_PAYLOAD_HEX = '48656c6c6f2057616c6c6574436f6e6e656374';
 const CARDANOSCAN_PREPROD_TX_BASE = 'https://preprod.cardanoscan.io/transaction/';
+const COLLATERAL_AMOUNT_CBOR = '1a004c4b40';
 
 export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
   const statusEl = document.getElementById('status')!;
@@ -119,6 +120,10 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
         signedWitnessHex = await client.signTx(txHex, false);
         submitBtn.disabled = false;
         clearTxStatus();
+        break;
+      }
+      case 'cardano_getCollateral': {
+        await client.getCollateral(COLLATERAL_AMOUNT_CBOR);
         break;
       }
       case 'cardano_signData': {

@@ -1,18 +1,25 @@
 name: wallet_connect_cardano
 description: WalletConnect v2 communication bridge for Cardano wallets implementing CIP-30.
-version: 0.0.1
+version: 0.1.0
 homepage: https://github.com/vespr-wallet/wallet_connect_cardano
+repository: https://github.com/vespr-wallet/wallet_connect_cardano
+issue_tracker: https://github.com/vespr-wallet/wallet_connect_cardano/issues
+topics:
+  - cardano
+  - cip-30
+  - wallet
+  - walletconnect
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
-  flutter: ">=3.0.0"
+  sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.32.0"
 
 dependencies:
-  flutter:
-    sdk: flutter
-  reown_walletkit: ^1.4.0
+  reown_walletkit: ^1.5.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  lints: ^6.0.0
+  mocktail: ^1.0.4
+  reown_core: ^1.5.0

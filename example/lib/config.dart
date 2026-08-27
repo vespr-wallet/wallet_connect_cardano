@@ -4,7 +4,6 @@ class AppConfig {
 
   static const String reownProjectId = String.fromEnvironment(
     'REOWN_PROJECT_ID',
-    defaultValue: '310c52e0709fb044854ca181562678f8',
   );
 
   /// Demo wallet mnemonic — override for local testing only.
@@ -20,5 +19,5 @@ class AppConfig {
   );
 
   static bool get hasReownProjectId =>
-      reownProjectId.isNotEmpty && reownProjectId != 'your_project_id_here';
+      reownProjectId.isNotEmpty && reownProjectId != 'your_project_id';
 }
