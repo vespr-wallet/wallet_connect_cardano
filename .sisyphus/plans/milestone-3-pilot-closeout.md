@@ -25,7 +25,7 @@ paperwork. This section supersedes the older SDK-only execution order below.
 ### Scope and decisions
 
 - SDK work remains in this session's existing SDK worktree. App changes belong
-  in `/Users/alexandrudochioiu/FlutterProjects/nft-craze-wallet`, on
+  in the existing `nft-craze-wallet` application checkout, on
   `feat/walletconnect-beta`, created from clean, fetched `develop`
   (`3a7df691b4b20553c074e0db379394b14979d956`). No additional worktrees.
 - Demo/beta only, not intended for public release. Reuse existing app patterns;
