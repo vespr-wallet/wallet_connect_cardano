@@ -17,6 +17,167 @@
 
 ---
 
+## Active VESPR beta integration plan
+
+The current user request prioritizes the actual VESPR pilot before close-out
+paperwork. This section supersedes the older SDK-only execution order below.
+
+### Scope and decisions
+
+- SDK work remains in this session's existing SDK worktree. App changes belong
+  in `/Users/alexandrudochioiu/FlutterProjects/nft-craze-wallet`, on
+  `feat/walletconnect-beta`, created from clean, fetched `develop`
+  (`3a7df691b4b20553c074e0db379394b14979d956`). No additional worktrees.
+- Demo/beta only, not intended for public release. Reuse existing app patterns;
+  no architecture overhaul, database migration, or new navigation destination.
+  User additionally requires easy removal: contain implementation in
+  `lib/features/wallet_connect/`, tests in one matching subtree, and the preview
+  in `lib_design_book/`. Only thin scanner/home hooks and package dependencies
+  should live outside it. Do not modify existing signing or generated DI code.
+  Document the exact removal points.
+- **Testnets only (preprod and preview).** This replaces the initial mainnet +
+  preprod decision. Recognize `wc:` in the existing wallet-header scanner before
+  ordinary deeplink processing. On mainnet, show an error modal:
+  "WalletConnect is currently restricted to test networks during this testing phase."
+  Do not pair, navigate to the browser, or log the pairing URI/symmetric key.
+- One active dApp. Require explicit proposal approval, pin wallet/network/address,
+  and actively subscribe to `SettingsService.network` to revoke/disconnect on
+  network changes, especially switching to mainnet. Do not wait for another scan
+  or remote request. Local access must be revoked before relay I/O finishes.
+  Also disconnect on account changes. Never silently rebind a session.
+- Use the existing SDK demo Reown project via configuration, not a committed ID.
+- Reuse VESPR's connection/signing modals and authentication. No signing keys or
+  signing-engine implementation in the SDK. Unsupported cases fail explicitly.
+- UI must match Zyra typography, theme colors, rounded surfaces, spacing, and
+  existing `showCoreModal` sheets. Connected card is a separate scrolling
+  `SliverToBoxAdapter` immediately before `SliverTokensSection`, never a child of
+  the animated/pinned header. Tapping opens dApp/network/wallet/account details
+  and a disconnect action.
+- **Never upgrade VESPR to `flutter_secure_storage` v10.** Use latest Reown with
+  an explicit `flutter_secure_storage: 9.2.4` app dependency override. If that
+  proves incompatible, the user authorizes a Reown fork pinned to v9 instead.
+  VESPR's encryption implementation and wallet data must remain unchanged.
+- **User-owned UI gate:** share actual simulator screenshots as soon as the UI
+  exists, identify fixture previews versus live connections, and ask whether
+  styling is appropriate. Do not count silence or automated tests as approval.
+
+### Current code and narrow integration seams
+
+- Scanner: `lib/features/wallet/header/wallet_header_widget.dart` calls
+  `showCodeScanningModal`, then `DeeplinkService.process`. Intercept WalletConnect
+  here before existing logging/parsing; keep other QR flows unchanged.
+- Home: `lib/features/wallet/wallet_page.dart`, directly before
+  `SliverTokensSection`. Keep the existing collapsing header and notifications.
+- UI: `lib/design_language/zyra/`, `lib/ui_components/modal/core_modal.dart`,
+  and `lib/pages/home/cip30/modals/`.
+- Wallet data/signing: `lib/service/cip30_service.dart`, `WalletRepository`,
+  `BiometricsService`, `GrantAccessModal`, `SignTransactionModal`,
+  `SignMessageModal`; browser connector is a reference, not a new transport.
+- SDK: `WalletConnectCardano` and `CardanoWalletDelegate`. A feature-local WalletKit
+  wrapper preserves request topic/chain in a zone across async delegate calls.
+  Exactly one active session is authorized. Lazy transport initialization discards
+  restored SDK sessions before pairing; wallet permission is never restored.
+  Re-pair after restart rather than adding another permission database.
+
+### Work and acceptance tracker
+
+- [x] Inspect SDK and VESPR, read requested plan-maker/worker skills, create VESPR branch.
+- [x] SDK baseline: Flutter 3.44.8 `flutter test` (36 tests), `flutter analyze`
+  (no issues), and `flutter pub publish --dry-run` (0 warnings) pass.
+- [x] Build testable testnet-only scanner policy and existing-style error modal.
+  The real scanner hookup and live gate checks are now complete below.
+- [x] Build connected inline card and details/disconnect sheet using theme tokens.
+  Standalone fixture preview builds successfully on the iPhone 17 Pro simulator.
+- [x] `WalletConnectService` owns both real network and wallet subscriptions,
+  routes both through `_checkBinding`, and disposes both. Session state owns
+  only state/invariants. Local revocation precedes relay I/O. The initial A9
+  ownership finding is resolved; architecture reassessment is **ACCEPTED**.
+  Final UI delta also accepted: open details follow revocation without a stale
+  Connected badge, preserving retry after failed relay teardown.
+- [x] Capture light/dark simulator UI screenshots; obtain explicit user approval.
+  Owner selected **Approve this style**. Screenshots are fixture previews:
+  `/tmp/vespr-wc-home-dark-final.png`, `/tmp/vespr-wc-home-light.png`,
+  `/tmp/vespr-wc-details-dark.png`, `/tmp/vespr-wc-details-light.png`, and
+  `/tmp/vespr-wc-mainnet-restricted.png`.
+- [x] Add pinned SDK Git dependency and latest Reown WalletKit 1.5.0, preserving
+  secure storage 9.2.4 through the explicit app pubspec override. Verified the
+  resolved graph after explicit pub get; all 36 SDK tests and 20 app feature
+  tests pass with v9. Native iOS SecureStore probe passes write/update/restore/
+  delete with a separate VESPR-options probe key preserved and no fallback.
+  Screenshot: `/tmp/vespr-wc-storage9-native.png`. No real wallet data touched.
+  This does not prove relay flows or Android. No Reown fork needed for these checks.
+- [x] Add configured single-session adapter with namespace, topic, chain and wallet
+  binding; existing grant/signing UI; sanitized errors; async reauthorization;
+  lock refusal; and active identity/network revocation. Signing limitations are
+  explicit: software data signing, partial witnessing and Shelley testnet outputs.
+- [x] Connect the actual scanner and scrolling card. An ordinary address QR still
+  opens the existing transaction wizard; the test draft was cancelled. Malformed
+  WalletConnect input shows a safe error without creating a pairing.
+- [x] Add focused tests: **47 pass**; scoped analysis clean. Coverage includes
+  mainnet gate, binding, stale topic/chain, late responses, locked requests,
+  second sessions, restored-session cleanup, retry, pagination and wire format.
+- [x] Run live preprod pairing/approval/rejection, reads, null collateral and
+  insufficient UTXOs, message signing/decline, transaction signing/submission,
+  and wallet/dApp disconnect. COSE and transaction Ed25519 signatures were
+  independently verified. Self-transfer confirmed by Koios at block **5173761**:
+  `9ba243134728b95a9660f2271622b7208ce65cba41dd7b516c7ff547141e4e19`.
+  Fee: 0.5 test ADA; 49.5 test ADA and all 1,000 tBODEGA retained.
+- [x] Prove mainnet switching during an unapproved signing request clears binding,
+  closes the prompt and disconnects the peer without returning a signature.
+  Scanning a valid URI on mainnet shows the required restriction and leaves the
+  pairing count unchanged. The same URI later pairs on preprod.
+- [x] Prove active preprod-to-preview revocation. Fresh preview pairing and live
+  `cip34:0-2` reads return network 0, zero balance and no UTXOs. Preview requests
+  use Sign Client directly because the stock demo UI defaults to preprod.
+- [x] Build full iOS simulator application and Android debug APK. Two narrow
+  feature-local adapters fix observed Reown 1.5 `ConnectivityResult.other` and
+  JSON-null issues. Android requires a group-scoped JitPack repository for
+  Reown's native Yttrium dependency. Storage remains **9.2.4**, with no fork.
+- [x] Capture actual light/dark connected home/details and signing UI. The row
+  moves with the list (y=448 to y=276); wallet title remains pinned (y=85).
+  Decoded QR input is simulator-injected into the existing camera stream, not
+  optical camera acquisition. No production debug entrypoint is added.
+- [x] Record findings, exact app removal points and evidence boundaries in the
+  feature README and [`docs/vespr-pilot.md`](../../docs/vespr-pilot.md).
+- [ ] Physical-camera, Android runtime/storage, second native wallet and enrolled
+  biometric/device-lock coverage. Unit evidence is not a claim these were run.
+- [ ] Complete broader integration guidance and Catalyst report/video tasks below.
+  Local screenshots and test records are not hosted Catalyst submissions.
+
+### Verification boundary
+
+- Unit/widget: mainnet `wc:` scan produces the restriction modal and zero pair
+  calls; preprod/preview scan routes to pairing; normal QR routes stay intact;
+  malformed WalletConnect URI gives a safe error; disconnected card is absent;
+  details render long metadata and disconnect/loading/error states correctly.
+- Simulator: iOS, light/dark home placement and sheet; user acceptance required.
+  Explicitly label fixture-based UI previews; they do not prove relay integration.
+- Live integration: Reown proposal acceptance/rejection, CIP-30 reads/signatures,
+  user decline, disconnect both ways, lock refusal, identity/network change,
+  second-session refusal, restart requiring re-pairing. Use preprod test funds.
+- Platform: Android dependency/build smoke if feasible; report unexecuted coverage
+  rather than implying an iOS screenshot proves Android or physical camera use.
+- Keep this plan active on partial/blocked coverage. Catalyst completion,
+  publishing, beta distribution, and report/video submission are not implicit.
+
+### Complexity and cleanup budget
+
+One service owns SDK initialization, one nullable session binding, one observable
+connection state, one UI-interaction busy flag, and lifecycle subscriptions.
+Each protects an ordinary flow: incoming requests while locked, switching wallet,
+second pairing, and user disconnect. Reown owns transport/session storage.
+No per-dApp registry, custom database, persistent permission store, request queue,
+background polling, or account migration protocol. Count actual mutable parts
+again during implementation; do not grow cross-cutting coordination for theory.
+
+No obsolete production behavior found: existing QR, browser CIP-30, and signing
+flows remain necessary. Do not remove them or broaden this demo into a refactor.
+The requested architecture reassessment accepted the corrected implementation.
+Keep future review proportional to this removable beta; do not impose unrelated
+Sesori workspace structure or broaden it into a general wallet refactor.
+
+---
+
 ## Context
 
 ### Original Request
@@ -101,7 +262,8 @@ Ensure the SDK is well-documented for integration, fix any issues found during p
 
 ## Verification Strategy
 
-> **ZERO HUMAN INTERVENTION** — ALL verification is agent-executed.
+> Automated checks are agent-executed. The active VESPR pilot additionally
+> requires simulator screenshots and explicit user UI acceptance, as requested.
 
 ### Test Decision
 - **Infrastructure exists**: YES (from M2)

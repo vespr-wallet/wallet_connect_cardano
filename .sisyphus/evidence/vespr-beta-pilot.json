@@ -1,0 +1,68 @@
+{
+  "scope": "Removable VESPR WalletConnect testnet beta; local validation, not Catalyst submission",
+  "source": {
+    "appBranch": "feat/walletconnect-beta",
+    "appImplementationCommit": "0db3e39ad72d76457b96b01f89e9775d38faa16e",
+    "appBaseCommit": "3a7df691b4b20553c074e0db379394b14979d956",
+    "sdkCommit": "6109a69837a252adfe91807e26149314e7a50a72",
+    "implementationUncommittedAtValidation": true
+  },
+  "versions": {
+    "flutter": "3.44.8",
+    "reown_walletkit": "1.5.0",
+    "reown_core": "1.5.0",
+    "reown_sign": "1.4.0",
+    "flutter_secure_storage": "9.2.4",
+    "existingPackageVersionsChanged": false
+  },
+  "automated": {
+    "featureTestsPassed": 47,
+    "sdkTestsPassed": 36,
+    "scopedAppAnalysis": "pass",
+    "sdkAnalysis": "pass",
+    "sdkPublishDryRunWarnings": 0,
+    "iosSimulatorBuild": "pass",
+    "androidDebugApkBuild": "pass",
+    "architectureReassessment": "ACCEPTED",
+    "gitDiffCheck": "pass"
+  },
+  "liveIos": {
+    "decodedQrInput": "Temporary debug extension feeds existing camera-controller stream; physical camera not tested",
+    "preprodRelayApprovalAndRejection": "pass",
+    "cip30ReadsAndPagination": "pass",
+    "nullCollateralAndInsufficientUtxos": "pass",
+    "invalidAmountRejection": "pass",
+    "dataSignature": "COSE/Ed25519 verified, original payload and protected address unchanged, public key hash matches requested payment address",
+    "dataSignatureDecline": "CIP-30 code 3",
+    "transactionSignature": "Ed25519 witness verified against unchanged body hash",
+    "walletAndDappDisconnect": "pass",
+    "openDetailsPeerDisconnect": "Live final build shows Disconnected and Close; no stale Connected badge",
+    "restoredTransportSessionCleanup": "pass",
+    "mainnetDuringPendingSigning": "Binding cleared, prompt closed, peer disconnected, code 3 returned, no signature",
+    "mainnetValidQr": "Restriction shown; pairing count unchanged",
+    "preprodToPreview": "Existing session revoked; fresh cip34:0-2 pairing and reads succeeded",
+    "previewReads": {"networkId": 0, "balanceCbor": "00", "utxos": []},
+    "malformedWalletConnectQr": "Safe error; pairing count unchanged",
+    "ordinaryAddressQr": "Existing transaction wizard opened; cancelled without approval/submission",
+    "scrolling": {"connectedRowYBefore": 448, "connectedRowYAfter": 276, "pinnedWalletTitleY": 85},
+    "themes": "Actual light/dark home and details captured; owner previously approved fixture style"
+  },
+  "preprodTransaction": {
+    "hash": "9ba243134728b95a9660f2271622b7208ce65cba41dd7b516c7ff547141e4e19",
+    "confirmationSource": "preprod Koios tx_info",
+    "blockHeight": 5173761,
+    "inputLovelace": "50000000",
+    "outputLovelace": "49500000",
+    "feeLovelace": "500000",
+    "lovelaceConserved": true,
+    "allNativeAssetsPreserved": true,
+    "mainnetFundsUsed": false
+  },
+  "notExercised": [
+    "Physical camera acquisition",
+    "Android runtime and native secure-storage behavior",
+    "Second native wallet/account selection",
+    "Enrolled biometric/device-lock flow"
+  ],
+  "separateDeliverables": ["Broader SDK integration guide", "Catalyst final report", "Hosted close-out video", "Public release/distribution"]
+}
