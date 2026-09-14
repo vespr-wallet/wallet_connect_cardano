@@ -1,0 +1,82 @@
+{
+  "scope": "Committed VESPR testnet beta follow-up; local validation, not Catalyst submission",
+  "source": {
+    "appRepository": "vespr-wallet/nft-craze-wallet (private)",
+    "appCommit": "579cc3afd464ca68b333ef97b20bdb0cd0667920",
+    "appTree": "0b919b5353453868aa9a08da5faf556789620fea",
+    "sdkCommit": "6109a69837a252adfe91807e26149314e7a50a72",
+    "cleanCommittedCheckout": true
+  },
+  "recordedAt": "2026-09-14T09:25:53.247Z",
+  "flutter": "3.44.8",
+  "evidenceBundle": {
+    "location": "Operator-local close-out evidence bundle; not yet hosted",
+    "logPathsRelativeToBundle": true,
+    "historicalRecord": "vespr-beta-pilot.json",
+    "boundary": "The earlier uncommitted validation flag remains historical truth. This new record covers only the commands and live checks explicitly listed here."
+  },
+  "commands": [
+    {
+      "command": "flutter test --no-pub test/features/wallet_connect --reporter expanded",
+      "workingDirectory": "<VESPR_CHECKOUT>",
+      "exitCode": 0,
+      "result": "79 focused tests passed",
+      "log": "evidence/validation/feature-tests.log",
+      "logSha256": "c3f29104d5572c6549913f1e14db13696188761a3c72ce672fc2629da9412306"
+    },
+    {
+      "command": "dart analyze",
+      "workingDirectory": "<VESPR_CHECKOUT>",
+      "exitCode": 0,
+      "result": "57 informational findings; no errors or warnings",
+      "log": "evidence/validation/app-analysis.log",
+      "logSha256": "7527f01fae0fd4a7dcd1c1ea14e0c58eb4b5cbd382adc33f8ccffb27ee81b56c"
+    },
+    {
+      "command": "flutter build ios --debug --simulator --no-pub",
+      "workingDirectory": "<VESPR_CHECKOUT>",
+      "exitCode": 0,
+      "result": "Built build/ios/iphonesimulator/Runner.app",
+      "log": "evidence/validation/ios-build.log",
+      "logSha256": "63ed8157c7ab22944f91856723f0c6045fe943d0a67e7a9fd29b72d5380da110"
+    },
+    {
+      "command": "flutter build apk --debug --no-pub",
+      "workingDirectory": "<VESPR_CHECKOUT>",
+      "exitCode": 0,
+      "result": "Built build/app/outputs/flutter-apk/app-debug.apk",
+      "log": "evidence/validation/android-build.log",
+      "logSha256": "7a40226a4e12b72eed59a1208d01447201dff29456dbfdd4ec34bef89054bade"
+    }
+  ],
+  "liveIos": {
+    "recordedAt": "2026-09-14T09:33:18.809Z",
+    "build": "Full VESPR iOS simulator build from the committed source above",
+    "input": "Decoded QR injection into the existing camera-controller stream, not physical camera acquisition",
+    "pairingAndReads": "Approved preprod relay connection, network 0, balance/address/UTXO reads; singular/plural reward addresses match",
+    "dataSigning": "Message approved through existing VESPR UI; signature independently verified with COSE/Ed25519, unchanged unhashed payload/protected address and matching payment-key hash",
+    "dataVerificationCommand": "dart --packages=<VESPR_CHECKOUT>/.dart_tool/package_config.json verify-data.dart live-reads.json data-signature.json",
+    "dataVerificationWorkingDirectory": "evidence/validation in the operator-local evidence bundle",
+    "dataVerificationExitCode": 0,
+    "mainnetDuringSigning": "Binding/session/pairing removed; prompt closed; peer disconnected with code 6000; no signature returned",
+    "mainnetScan": "Required restriction shown, no wallet pairing added, no ordinary deeplink fallback; same URI later approved on preprod",
+    "leastPrivilege": "Only cardano_getNetworkId granted; unrequested signing refused. JS Sign Client normalizes chain-keyed input; exact namespace-key preservation has unit coverage.",
+    "walletDisconnect": "Wallet and peer retain zero sessions/pairings",
+    "peerDisconnect": "Wallet retains zero sessions/pairings; peer initially retains one pairing, then zero after asynchronous pairing-delete notification",
+    "endState": "Preprod; disconnected; no active authorization or request UI",
+    "record": "evidence/validation/committed-live.json",
+    "recordSha256": "c74c030f5dd57d98b258e472b7b37301e2fba70018d6e8b21695b825796a97d1"
+  },
+  "historicalNotRepeatedAtThisCommit": [
+    "Preprod transaction witnessing and confirmed submission",
+    "Preview pairing/reads",
+    "Full light/dark scrolling and standalone native secure-storage probe"
+  ],
+  "notExercised": [
+    "Physical camera acquisition",
+    "Android runtime/native storage",
+    "Second native wallet/account",
+    "Enrolled biometric/device-lock flow"
+  ],
+  "knownLimitation": "Five-minute proposal/decision deadline revokes authority and pending UI, but does not abort uncancellable Reown pair/init I/O. Admission remains held until that work settles; permanently stalled transport requires app restart."
+}
