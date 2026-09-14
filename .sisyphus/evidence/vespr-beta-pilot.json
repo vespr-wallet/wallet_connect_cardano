@@ -1,5 +1,7 @@
 {
-  "scope": "Removable VESPR WalletConnect testnet beta; local validation, not Catalyst submission",
+  "scope": "Historical VESPR WalletConnect testnet pilot; local validation, not Catalyst submission",
+  "committedFollowup": "vespr-beta-committed.json",
+  "provenanceLimit": "Original checks ran before the implementation commit and no exact tested working-tree hash was captured. The separate follow-up record contains clean-commit reruns and their narrower live scope.",
   "source": {
     "appBranch": "feat/walletconnect-beta",
     "appImplementationCommit": "0db3e39ad72d76457b96b01f89e9775d38faa16e",

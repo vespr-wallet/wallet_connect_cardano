@@ -45,7 +45,9 @@ paperwork. This section supersedes the older SDK-only execution order below.
   network changes, especially switching to mainnet. Do not wait for another scan
   or remote request. Local access must be revoked before relay I/O finishes.
   Also disconnect on account changes. Never silently rebind a session.
-- Use the existing SDK demo Reown project via configuration, not a committed ID.
+- Owner follow-up: embed the existing demo's public Reown project identifier in
+  private app feature-local configuration. Do not reproduce its value in public
+  SDK documentation or exported evidence. No Dart define is required.
 - Reuse VESPR's connection/signing modals and authentication. No signing keys or
   signing-engine implementation in the SDK. Unsupported cases fail explicitly.
 - UI must match Zyra typography, theme colors, rounded surfaces, spacing, and
@@ -113,9 +115,18 @@ paperwork. This section supersedes the older SDK-only execution order below.
 - [x] Connect the actual scanner and scrolling card. An ordinary address QR still
   opens the existing transaction wizard; the test draft was cancelled. Malformed
   WalletConnect input shows a safe error without creating a pairing.
-- [x] Add focused tests: **47 pass**; scoped analysis clean. Coverage includes
-  mainnet gate, binding, stale topic/chain, late responses, locked requests,
-  second sessions, restored-session cleanup, retry, pagination and wire format.
+- [x] Initial focused checkpoint: **47 tests**, scoped analysis clean. Subsequent
+  review checkpoint: **79 tests** on committed `579cc3afd464ca68b333ef97b20bdb0cd0667920`.
+  Full analysis exits 0 with informational findings only; both native builds pass.
+  Coverage includes mainnet gate, binding, stale topic/chain, late responses,
+  locks, restored/orphan cleanup, least-privilege namespaces, scanned proposal
+  ownership, early/late approval, serialized relay transitions and pre-builder
+  modal cancellation. Independent closing review accepted the narrow fixes.
+- [x] Rerun pairing/reads, independently verified message signing, mainnet signing
+  revocation/scan restriction, read-only capability approval and both disconnect
+  paths on the committed build. Record exact commit/tree, commands/results and
+  log hashes in [`vespr-beta-committed.json`](../evidence/vespr-beta-committed.json).
+  Preserve historical evidence separately; no second transaction was submitted.
 - [x] Run live preprod pairing/approval/rejection, reads, null collateral and
   insufficient UTXOs, message signing/decline, transaction signing/submission,
   and wallet/dApp disconnect. COSE and transaction Ed25519 signatures were
@@ -162,13 +173,15 @@ paperwork. This section supersedes the older SDK-only execution order below.
 
 ### Complexity and cleanup budget
 
-One service owns SDK initialization, one nullable session binding, one observable
-connection state, one UI-interaction busy flag, and lifecycle subscriptions.
-Each protects an ordinary flow: incoming requests while locked, switching wallet,
-second pairing, and user disconnect. Reown owns transport/session storage.
-No per-dApp registry, custom database, persistent permission store, request queue,
-background polling, or account migration protocol. Count actual mutable parts
-again during implementation; do not grow cross-cutting coordination for theory.
+One service owns SDK initialization, the nullable session binding/observable
+state, one pending scanned attempt, pairing/review admission, serialized teardown,
+one cancellable UI slot and identity subscriptions. The connectivity adapter
+owns one serialized relay reconciler and a notification revision. These protect
+concrete reviewed races; Reown still owns transport/session storage. There is no
+per-dApp registry, database, persistent permission store, request queue,
+background polling or account migration. The five-minute deadline invalidates
+authority/UI, but cannot abort Reown pair/init I/O: admission stays held until it
+settles, and permanently stalled transport requires an app restart.
 
 No obsolete production behavior found: existing QR, browser CIP-30, and signing
 flows remain necessary. Do not remove them or broaden this demo into a refactor.
