@@ -44,21 +44,18 @@ The integrating wallet app (e.g., VESPR) implements the callback interface to pr
 - **Scope**: Functional WalletConnect v2 client with complete session management, CIP-30 method routing, and basic documentation
 - **Acceptance**: Stable sessions with test dApps, all CIP-30 methods routed correctly, basic docs
 - **Evidence**: GitHub repo, video (tx signing flow), screenshot (WC session)
-- **Plan**: `.sisyphus/plans/milestone-1-core-sdk.md`
 
 ### Milestone 2: Productizing SDK & Publishing
 - **Delivery**: Month 5 (Apr 2026) | **Budget**: 22,500 ADA
 - **Scope**: Production-quality codebase, unit tests, comprehensive README, pub.dev publishing
 - **Acceptance**: Dart/Flutter best practices, unit test coverage, README with examples, published on pub.dev with semver + changelog
 - **Evidence**: pub.dev link, test screenshots, demo video
-- **Plan**: `.sisyphus/plans/milestone-2-productize-publish.md`
 
 ### Milestone 3: Pilot Integration & Close-out
 - **Delivery**: Month 6 (May 2026) | **Budget**: 30,000 ADA
 - **Scope**: VESPR Wallet pilot integration (in a SEPARATE repo), Catalyst Final Report, Close-out Video
 - **Acceptance**: VESPR beta with WC sessions, CIP-30 working, Final Report, Close-out Video
 - **Evidence**: VESPR screenshot, report link, video link
-- **Plan**: `.sisyphus/plans/milestone-3-pilot-closeout.md`
 - **NOTE**: The VESPR integration code is NOT in this repo. This repo's M3 work is limited to integration guides, any SDK fixes found during pilot, and documentation for the Catalyst deliverables.
 
 ---
