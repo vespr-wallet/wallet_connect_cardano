@@ -48,8 +48,9 @@ Open `http://localhost:5173` on your desktop browser.
 ### 2. Optional: preprod self-test (after funding)
 
 The web dApp's **signTx** builds a self-transfer from the connected wallet's largest
-UTXO (via `getUtxos` and `getChangeAddress`, 0.3 ADA fee), and **submitTx** sends it
-with the returned witnesses attached. This works with any CIP-30 wallet.
+UTXO (via `getUtxos` and `getChangeAddress`; fee and minimum ADA computed with CSL using
+preprod parameters), and **submitTx** sends it with the returned witnesses attached.
+The largest UTXO must hold enough ADA for the fee plus the minimum ADA of its tokens.
 
 To verify signing and submission on preprod (2 self-transfers):
 

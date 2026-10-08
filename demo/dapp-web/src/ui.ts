@@ -22,8 +22,11 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
 
   let cachedPaymentAddressHex: string | null = null;
   let signedTxHex: string | null = null;
+  // Bumped on every session change so an in-flight signTx can't land on a different session.
+  let sessionGeneration = 0;
 
   client.setSessionListener((connected) => {
+    sessionGeneration++;
     updateConnectionUi(connected);
   });
 
@@ -114,6 +117,7 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
     switch (method) {
       case 'cardano_signTx': {
         signedTxHex = null;
+        const generation = sessionGeneration;
         const utxos = await client.request<string[] | null>('cardano_getUtxos');
         if (!utxos?.length) {
           throw new Error('Wallet has no UTXOs. Fund it from the preprod faucet.');
@@ -121,6 +125,9 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
         const changeAddressHex = await client.request<string>('cardano_getChangeAddress');
         const unsignedTxHex = buildSelfTransfer(utxos, changeAddressHex);
         const witnessSetHex = await client.signTx(unsignedTxHex, false);
+        if (generation !== sessionGeneration) {
+          throw new Error('Session changed while signing; signature discarded.');
+        }
         signedTxHex = attachWitnesses(unsignedTxHex, witnessSetHex);
         submitBtn.disabled = false;
         clearTxStatus();
