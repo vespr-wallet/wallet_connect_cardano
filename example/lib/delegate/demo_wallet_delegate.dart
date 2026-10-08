@@ -1,4 +1,3 @@
-import 'package:cardano_dart_types/cardano_dart_types.dart';
 import 'package:wallet_connect_cardano/wallet_connect_cardano.dart';
 
 import '../wallet/demo_wallet.dart';
@@ -36,9 +35,6 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
   void Function(String txHash)? onTransactionSubmitted;
   final bool requireApprovalForSigning;
   RequestApproval? approvalHandler;
-
-  String? _lastUnsignedTxHex;
-  String? _lastSignedTxHex;
 
   /// Max UTXOs / addresses returned per paginate page (CIP-30 PaginateError threshold).
   static const int maxPaginateLimit = 100;
@@ -127,23 +123,11 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
 
   @override
   Future<String> signTx(String tx, {bool partialSign = false}) async {
-    CardanoTransaction unsigned;
-    try {
-      // Rebuild from live Koios UTXOs — ignore stale unsigned tx from the dApp fixture.
-      unsigned = await demoWallet.buildSelfTransferUnsigned();
-    } catch (error) {
-      throw CardanoTxSignError(
-        code: CardanoTxSignError.proofGeneration,
-        info: error.toString(),
-      );
-    }
-
-    final unsignedHex = unsigned.serializeHexString().toLowerCase();
     final approved = await _maybeApprove(
       SigningApprovalRequest(
         method: 'cardano_signTx',
-        subtitle: 'Review transaction (live UTXOs)',
-        detail: SigningDisplay.formatTransaction(unsignedHex),
+        subtitle: 'Review transaction',
+        detail: SigningDisplay.formatTransaction(tx),
       ),
     );
     if (!approved) {
@@ -155,9 +139,7 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
 
     onOperationStarted?.call('cardano_signTx');
     try {
-      final witnessHex = await demoWallet.signTransactionHex(unsignedHex);
-      _lastUnsignedTxHex = unsignedHex;
-      _lastSignedTxHex = await demoWallet.signAndSerializeTransaction(unsigned);
+      final witnessHex = await demoWallet.signTransactionHex(tx);
       onOperationSucceeded?.call('cardano_signTx');
       return witnessHex;
     } catch (error) {
@@ -198,8 +180,7 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
 
   @override
   Future<String> submitTx(String tx) async {
-    final normalizedTx = tx.trim().toLowerCase();
-    final signedTx = _resolveSignedTx(normalizedTx);
+    final signedTx = tx.trim();
 
     final approved = await _maybeApprove(
       SigningApprovalRequest(
@@ -225,25 +206,6 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
       onOperationFailed?.call('cardano_submitTx', message);
       throw CardanoTxSendError(code: CardanoTxSendError.failure, info: message);
     }
-  }
-
-  String _resolveSignedTx(String txHex) {
-    if (_lastSignedTxHex == null) {
-      throw const CardanoTxSendError(
-        code: CardanoTxSendError.refused,
-        info: 'Sign the transaction first with cardano_signTx',
-      );
-    }
-
-    // dApp may still send a stale fixture hex; submit the tx signed in this session.
-    if (_lastUnsignedTxHex != null && txHex == _lastUnsignedTxHex) {
-      return _lastSignedTxHex!;
-    }
-    if (txHex == _lastSignedTxHex) {
-      return _lastSignedTxHex!;
-    }
-
-    return _lastSignedTxHex!;
   }
 
   @override
