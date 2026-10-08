@@ -1,9 +1,9 @@
 import QRCode from 'qrcode';
 
 import { READ_METHODS } from './constants';
+import { attachWitnesses, buildSelfTransfer } from './tx';
 import type { CardanoDappClient } from './wc-client';
 
-const UNSIGNED_TX_FIXTURE_PATH = '/fixtures/unsigned-tx.hex';
 const SIGN_DATA_PAYLOAD_HEX = '48656c6c6f2057616c6c6574436f6e6e656374';
 const CARDANOSCAN_PREPROD_TX_BASE = 'https://preprod.cardanoscan.io/transaction/';
 const COLLATERAL_AMOUNT_CBOR = '1a004c4b40';
@@ -21,8 +21,7 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
   const txStatusEl = document.getElementById('tx-status')!;
 
   let cachedPaymentAddressHex: string | null = null;
-  let cachedUnsignedTxHex: string | null = null;
-  let signedWitnessHex: string | null = null;
+  let signedTxHex: string | null = null;
 
   client.setSessionListener((connected) => {
     updateConnectionUi(connected);
@@ -75,7 +74,7 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
       sessionInfo.classList.add('hidden');
       clearTxStatus();
       cachedPaymentAddressHex = null;
-      signedWitnessHex = null;
+      signedTxHex = null;
       submitBtn.disabled = true;
     }
   }
@@ -91,7 +90,7 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
       } finally {
         btn.disabled = false;
         if (method === 'cardano_signTx') {
-          submitBtn.disabled = signedWitnessHex == null;
+          submitBtn.disabled = signedTxHex == null;
         }
       }
     });
@@ -114,10 +113,15 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
   async function invokeMethod(method: string): Promise<void> {
     switch (method) {
       case 'cardano_signTx': {
-        // CIP-30 requires a tx param; the wallet rebuilds from live Koios UTXOs.
-        cachedUnsignedTxHex = null;
-        const txHex = await loadUnsignedTxFixture();
-        signedWitnessHex = await client.signTx(txHex, false);
+        signedTxHex = null;
+        const utxos = await client.request<string[] | null>('cardano_getUtxos');
+        if (!utxos?.length) {
+          throw new Error('Wallet has no UTXOs. Fund it from the preprod faucet.');
+        }
+        const changeAddressHex = await client.request<string>('cardano_getChangeAddress');
+        const unsignedTxHex = buildSelfTransfer(utxos, changeAddressHex);
+        const witnessSetHex = await client.signTx(unsignedTxHex, false);
+        signedTxHex = attachWitnesses(unsignedTxHex, witnessSetHex);
         submitBtn.disabled = false;
         clearTxStatus();
         break;
@@ -132,13 +136,12 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
         break;
       }
       case 'cardano_submitTx': {
-        if (!signedWitnessHex) {
+        if (!signedTxHex) {
           throw new Error('Sign the transaction first with signTx');
         }
         showTxSubmitting();
         try {
-          const txHex = await loadUnsignedTxFixture();
-          const txHash = await client.submitTx(txHex);
+          const txHash = await client.submitTx(signedTxHex);
           showTxSuccess(txHash);
         } catch (error) {
           showTxFailure(error);
@@ -209,25 +212,5 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
       cachedPaymentAddressHex = used[0]!;
     }
     return cachedPaymentAddressHex;
-  }
-
-  async function loadUnsignedTxFixture(): Promise<string> {
-    if (cachedUnsignedTxHex) return cachedUnsignedTxHex;
-    const response = await fetch(UNSIGNED_TX_FIXTURE_PATH);
-    if (!response.ok) {
-      throw new Error(
-        `Missing unsigned tx fixture at ${UNSIGNED_TX_FIXTURE_PATH}. ` +
-          'Run the faucet + fixture setup in docs/milestone-1-demo.md.',
-      );
-    }
-    cachedUnsignedTxHex = (await response.text())
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0 && !line.startsWith('#'))
-      .join('');
-    if (!cachedUnsignedTxHex) {
-      throw new Error('unsigned-tx.hex fixture is empty');
-    }
-    return cachedUnsignedTxHex;
   }
 }
