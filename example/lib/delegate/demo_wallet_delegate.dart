@@ -37,9 +37,6 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
   final bool requireApprovalForSigning;
   RequestApproval? approvalHandler;
 
-  String? _lastUnsignedTxHex;
-  String? _lastSignedTxHex;
-
   /// Max UTXOs / addresses returned per paginate page (CIP-30 PaginateError threshold).
   static const int maxPaginateLimit = 100;
 
@@ -125,25 +122,41 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
     return <String>[demoWallet.stakeAddressHex];
   }
 
-  @override
-  Future<String> signTx(String tx, {bool partialSign = false}) async {
-    CardanoTransaction unsigned;
+  /// Refuses transactions that could be valid on mainnet: the signing key is
+  /// the same on every network, so a preprod-only wallet must check this.
+  static void requirePreprodTransaction(String tx) {
+    final CardanoTransaction parsed;
     try {
-      // Rebuild from live Koios UTXOs — ignore stale unsigned tx from the dApp fixture.
-      unsigned = await demoWallet.buildSelfTransferUnsigned();
-    } catch (error) {
-      throw CardanoTxSignError(
-        code: CardanoTxSignError.proofGeneration,
-        info: error.toString(),
+      parsed = CardanoTransaction.deserializeFromHex(tx);
+    } catch (_) {
+      throw const CardanoApiError(
+        code: CardanoApiError.invalidRequest,
+        info: 'Invalid transaction CBOR',
       );
     }
+    if (parsed.body.networkId == NetworkId.mainnet ||
+        parsed.body.outputs.isEmpty ||
+        parsed.body.outputs.any(
+          (output) =>
+              !output.address.base58OrBech32Value.startsWith('addr_test1'),
+        )) {
+      throw const CardanoApiError(
+        code: CardanoApiError.refused,
+        info:
+            'This preprod wallet only signs transactions with testnet outputs',
+      );
+    }
+  }
 
-    final unsignedHex = unsigned.serializeHexString().toLowerCase();
+  @override
+  Future<String> signTx(String tx, {bool partialSign = false}) async {
+    // ponytail: partialSign ignored; single-key demo wallet always returns its own witness.
+    requirePreprodTransaction(tx);
     final approved = await _maybeApprove(
       SigningApprovalRequest(
         method: 'cardano_signTx',
-        subtitle: 'Review transaction (live UTXOs)',
-        detail: SigningDisplay.formatTransaction(unsignedHex),
+        subtitle: 'Review transaction',
+        detail: SigningDisplay.formatTransaction(tx),
       ),
     );
     if (!approved) {
@@ -155,9 +168,7 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
 
     onOperationStarted?.call('cardano_signTx');
     try {
-      final witnessHex = await demoWallet.signTransactionHex(unsignedHex);
-      _lastUnsignedTxHex = unsignedHex;
-      _lastSignedTxHex = await demoWallet.signAndSerializeTransaction(unsigned);
+      final witnessHex = await demoWallet.signTransactionHex(tx);
       onOperationSucceeded?.call('cardano_signTx');
       return witnessHex;
     } catch (error) {
@@ -198,8 +209,7 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
 
   @override
   Future<String> submitTx(String tx) async {
-    final normalizedTx = tx.trim().toLowerCase();
-    final signedTx = _resolveSignedTx(normalizedTx);
+    final signedTx = tx.trim();
 
     final approved = await _maybeApprove(
       SigningApprovalRequest(
@@ -225,25 +235,6 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
       onOperationFailed?.call('cardano_submitTx', message);
       throw CardanoTxSendError(code: CardanoTxSendError.failure, info: message);
     }
-  }
-
-  String _resolveSignedTx(String txHex) {
-    if (_lastSignedTxHex == null) {
-      throw const CardanoTxSendError(
-        code: CardanoTxSendError.refused,
-        info: 'Sign the transaction first with cardano_signTx',
-      );
-    }
-
-    // dApp may still send a stale fixture hex; submit the tx signed in this session.
-    if (_lastUnsignedTxHex != null && txHex == _lastUnsignedTxHex) {
-      return _lastSignedTxHex!;
-    }
-    if (txHex == _lastSignedTxHex) {
-      return _lastSignedTxHex!;
-    }
-
-    return _lastSignedTxHex!;
   }
 
   @override

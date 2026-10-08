@@ -13,8 +13,6 @@ import 'package:cardano_dart_types/cardano_dart_types.dart';
 import 'package:wc_cardano_example/delegate/demo_wallet_delegate.dart';
 import 'package:wc_cardano_example/wallet/demo_wallet.dart';
 
-import 'repo_paths.dart';
-
 Future<void> main() async {
   final demoWallet = await DemoWallet.create();
   print('Address: ${demoWallet.paymentAddressBech32}');
@@ -65,11 +63,5 @@ Future<void> main() async {
     print('  $hash');
   }
 
-  print('\nRegenerating unsigned-tx.hex fixture...');
-  final fixtureUnsigned = await demoWallet.buildSelfTransferUnsigned();
-  final fixtureFile = repoFile('demo/dapp-web/public/fixtures/unsigned-tx.hex');
-  await fixtureFile.parent.create(recursive: true);
-  await fixtureFile.writeAsString(fixtureUnsigned.serializeHexString());
-  print('Wrote ${fixtureFile.path}');
   exit(0);
 }

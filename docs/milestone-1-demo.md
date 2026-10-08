@@ -45,18 +45,12 @@ npm run dev
 
 Open `http://localhost:5173` on your desktop browser.
 
-### 2. Optional: unsigned tx fixture (after funding)
+### 2. Optional: preprod self-test (after funding)
 
-The example wallet **rebuilds** the signTx transaction from live Koios UTXOs on each
-sign (largest ADA-only input, 0.3 ADA fee, self-transfer). The web dApp still passes a
-placeholder `unsigned-tx.hex` only because CIP-30 requires a `tx` parameter.
-
-To refresh that placeholder file:
-
-```bash
-cd example
-flutter run -t tool/generate_fixture.dart -d macos --release
-```
+The web dApp's **signTx** builds a self-transfer from the connected wallet's largest
+UTXO (via `getUtxos` and `getChangeAddress`; fee and minimum ADA computed with CSL using
+preprod parameters), and **submitTx** sends it with the returned witnesses attached.
+The largest UTXO must hold enough ADA for the fee plus the minimum ADA of its tokens.
 
 To verify signing and submission on preprod (2 self-transfers):
 
@@ -94,7 +88,6 @@ flutter run --dart-define=REOWN_PROJECT_ID=<same project ID used in .env>
 |-------|-----|
 | `signTx` fails — no UTXOs | Fund wallet via preprod faucet |
 | Submit fails — UTXO already spent | Re-run **signTx** (wallet picks fresh UTXOs) |
-| Missing `unsigned-tx.hex` on web | Run `generate_fixture.dart` (placeholder only) |
 | Pairing hangs | Confirm both sides use the same Reown project ID and check network connectivity |
 | Empty balance/UTXOs | Confirm faucet sent to the address shown in the app |
 | Koios errors | Retry; API is `https://preprod.koios.rest/api/v1` |
