@@ -90,7 +90,12 @@ class CardanoRequestHandler {
         }
 
         final JsonRpcResponse<dynamic> response = handlerError == null
-            ? JsonRpcResponse<dynamic>(id: request.id, result: result)
+            ? JsonRpcResponse<dynamic>(
+                id: request.id,
+                // Reown refuses a response with neither result nor error, but
+                // CIP-30 null results (e.g. getUtxos) must reach the dApp.
+                result: result ?? const _JsonNull(),
+              )
             : JsonRpcResponse<dynamic>(
                 id: request.id,
                 error: _toJsonRpcError(handlerError),
@@ -335,4 +340,11 @@ class CardanoRequestHandler {
       return _delegate.submitTx(tx);
     });
   }
+}
+
+/// Serializes as an explicit JSON `null` result.
+class _JsonNull {
+  const _JsonNull();
+
+  Object? toJson() => null;
 }

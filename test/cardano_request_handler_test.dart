@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:reown_core/store/i_generic_store.dart';
@@ -106,6 +108,17 @@ void main() {
     expect(delegate.utxoAmount, 'named-amount');
     expect(delegate.utxoPaginate?.page, 0);
     expect(delegate.utxoPaginate?.limit, 50);
+  });
+
+  test('sends null delegate results as an explicit JSON null', () async {
+    delegate.utxos = null;
+    final response = await invoke('cardano_getUtxos');
+    expect(response.error, isNull);
+    expect(response.result, isNotNull);
+    final wire =
+        jsonDecode(jsonEncode(response.toJson((Object? value) => value)))
+            as Map<String, dynamic>;
+    expect(wire, containsPair('result', null));
   });
 
   test(

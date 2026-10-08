@@ -9,8 +9,9 @@ summarises what was tested and what other integrators can learn from it.
 - Networks: **preprod and preview only**. Scanning a WalletConnect code on
   mainnet shows a "test networks only" message, and switching the wallet to
   mainnet disconnects any active dApp session.
-- dApp: the example web dApp in [`demo/dapp-web`](../demo/dapp-web), over the
-  public WalletConnect relay.
+- dApp: the example web dApp in [`demo/dapp-web`](../demo/dapp-web) on
+  preprod, over the public WalletConnect relay. The demo is preprod-only, so
+  preview was exercised with a WalletConnect Sign Client script instead.
 - Wallet: VESPR's existing approval screens, signing and transaction services.
   The SDK only carries the messages.
 
@@ -19,8 +20,10 @@ summarises what was tested and what other integrators can learn from it.
 - Pairing by QR scan, connection approval and rejection.
 - All read methods: network ID, extensions, balance, UTXOs (with pagination),
   used/unused/change/reward addresses and collateral.
-- `signData` and `signTx` through VESPR's normal approval screens, including
-  user decline. Signatures were verified independently.
+- `signData` through VESPR's normal approval screens, including user decline.
+  Signatures were verified independently.
+- `signTx` through the same screens. VESPR returns its own witnesses and, like
+  its in-app connector, does not enforce `partialSign`.
 - `submitTx` on preprod:
   [9ba24313…4e19](https://preprod.cardanoscan.io/transaction/9ba243134728b95a9660f2271622b7208ce65cba41dd7b516c7ff547141e4e19).
 - Disconnect from either side.
@@ -29,10 +32,10 @@ summarises what was tested and what other integrators can learn from it.
 
 ## Notes for integrators
 
-- **Null results.** CIP-30 can legitimately return `null` (for example
-  `getCollateral`, or `getUtxos` when the amount cannot be met). Reown rejects a
-  response with neither a result nor an error, so return an explicit JSON
-  `null` result.
+- **Null results.** CIP-30 `getUtxos` returns `null` when the amount cannot be
+  met. Reown rejects a response with neither a result nor an error, so the SDK
+  sends a `null` delegate result as an explicit JSON `null`; just return
+  `null`.
 - **Bind sessions to what the user approved.** Tie each session to the wallet
   and network it was approved for, and disconnect when either changes.
 - **Android.** A Reown native dependency (`com.github.reown-com.yttrium`) is

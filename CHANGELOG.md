@@ -1,3 +1,11 @@
+## Unreleased
+
+### Fixed
+
+- Send a `null` delegate result (for example `getUtxos` when the amount cannot
+  be met) as an explicit JSON `null`. Reown WalletKit otherwise rejects a
+  response with neither a result nor an error.
+
 ## 0.1.0
 
 ### Added
