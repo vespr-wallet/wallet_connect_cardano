@@ -1,6 +1,6 @@
 name: wallet_connect_cardano
 description: WalletConnect v2 communication bridge for Cardano wallets implementing CIP-30.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/vespr-wallet/wallet_connect_cardano
 repository: https://github.com/vespr-wallet/wallet_connect_cardano
 issue_tracker: https://github.com/vespr-wallet/wallet_connect_cardano/issues
