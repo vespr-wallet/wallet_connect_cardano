@@ -1,3 +1,4 @@
+import 'package:cardano_dart_types/cardano_dart_types.dart';
 import 'package:wallet_connect_cardano/wallet_connect_cardano.dart';
 
 import '../wallet/demo_wallet.dart';
@@ -121,8 +122,36 @@ class DemoWalletDelegate implements CardanoWalletDelegate {
     return <String>[demoWallet.stakeAddressHex];
   }
 
+  /// Refuses transactions that could be valid on mainnet: the signing key is
+  /// the same on every network, so a preprod-only wallet must check this.
+  static void requirePreprodTransaction(String tx) {
+    final CardanoTransaction parsed;
+    try {
+      parsed = CardanoTransaction.deserializeFromHex(tx);
+    } catch (_) {
+      throw const CardanoApiError(
+        code: CardanoApiError.invalidRequest,
+        info: 'Invalid transaction CBOR',
+      );
+    }
+    if (parsed.body.networkId == NetworkId.mainnet ||
+        parsed.body.outputs.isEmpty ||
+        parsed.body.outputs.any(
+          (output) =>
+              !output.address.base58OrBech32Value.startsWith('addr_test1'),
+        )) {
+      throw const CardanoApiError(
+        code: CardanoApiError.refused,
+        info:
+            'This preprod wallet only signs transactions with testnet outputs',
+      );
+    }
+  }
+
   @override
   Future<String> signTx(String tx, {bool partialSign = false}) async {
+    // ponytail: partialSign ignored; single-key demo wallet always returns its own witness.
+    requirePreprodTransaction(tx);
     final approved = await _maybeApprove(
       SigningApprovalRequest(
         method: 'cardano_signTx',

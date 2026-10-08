@@ -19,6 +19,8 @@ const PREPROD_TX_CONFIG = TransactionBuilderConfigBuilder.new()
   .max_value_size(5000)
   .max_tx_size(16384)
   .ref_script_coins_per_byte(UnitInterval.new(BigNum.from_str('15'), BigNum.from_str('1')))
+  // Without this, change below min ADA is silently burned as fee, leaving zero outputs.
+  .do_not_burn_extra_change(true)
   .build();
 
 /**
