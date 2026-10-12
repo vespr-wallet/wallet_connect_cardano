@@ -17,7 +17,9 @@ summarises what was tested and what other integrators can learn from it.
 
 ## Tested
 
-- Pairing by QR scan, connection approval and rejection.
+- Physical iOS and Android devices.
+- Pairing by scanning the QR code with the phone camera, connection approval
+  and rejection.
 - All read methods: network ID, extensions, balance, UTXOs (with pagination),
   used/unused/change/reward addresses and collateral.
 - `signData` through VESPR's normal approval screens, including user decline.
@@ -29,6 +31,7 @@ summarises what was tested and what other integrators can learn from it.
 - Disconnect from either side.
 - Session revoked when the user switches network or wallet; a fresh approval is
   required afterwards.
+- Software and hardware wallets, and biometric approval.
 
 ## Notes for integrators
 
@@ -44,8 +47,3 @@ summarises what was tested and what other integrators can learn from it.
   `dependency_overrides` entry to 9.2.4 worked with Reown WalletKit 1.5.0.
 - **Simulators.** Reown may treat the `other` connectivity type as offline on
   iOS simulators. Test on a device or provide your own connectivity check.
-
-## Not yet covered
-
-Physical camera scanning, Android runtime testing, hardware wallets and
-biometric flows. These come before any mainnet rollout.
