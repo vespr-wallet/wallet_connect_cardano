@@ -307,7 +307,8 @@ void main() {
     await walletKit.handlers['cardano_signTx']!(topic, txA);
     await walletKit.handlers['cardano_signTx']!(topic, txB);
 
-    expect(walletKit.responses.map((r) => r.response.id), [101, 102]);  });
+    expect(walletKit.responses.map((r) => r.response.id), [101, 102]);
+  });
 
   test('does not answer an unrelated pending request', () async {
     walletKit.pending.requests.add(
