@@ -79,6 +79,7 @@ class CardanoRequestHandler {
           walletKit,
           topic,
           method,
+          params,
         );
         Object? handlerError;
         Object? result;
@@ -110,14 +111,19 @@ class CardanoRequestHandler {
     IReownWalletKit walletKit,
     String topic,
     String method,
+    Object? params,
   ) {
-    final pending = walletKit.pendingRequests.getAll();
-    for (var index = pending.length - 1; index >= 0; index--) {
-      final request = pending[index];
-      if (request.topic == topic && request.method == method) {
-        return request;
-      }
+    final matches = walletKit.pendingRequests
+        .getAll()
+        .where((r) => r.topic == topic && r.method == method)
+        .toList();
+    // Reown passes the same params object it stored on the SessionRequest,
+    // so identity pins the exact request even when several same-method
+    // requests are pending. Fall back to the newest match otherwise.
+    for (final request in matches.reversed) {
+      if (identical(request.params, params)) return request;
     }
+    if (matches.isNotEmpty) return matches.last;
 
     throw CardanoApiError(
       code: CardanoApiError.internalError,

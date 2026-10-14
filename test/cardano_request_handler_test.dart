@@ -286,6 +286,30 @@ void main() {
     expect(walletKit.responses.single.response.id, 43);
   });
 
+  test('binds concurrent same-method requests to their own ids', () async {
+    final txA = <Object?>['tx-A', false];
+    final txB = <Object?>['tx-B', false];
+    walletKit.pending.requests.addAll(<SessionRequest>[
+      _sessionRequest(
+        id: 101,
+        topic: topic,
+        method: 'cardano_signTx',
+        params: txA,
+      ),
+      _sessionRequest(
+        id: 102,
+        topic: topic,
+        method: 'cardano_signTx',
+        params: txB,
+      ),
+    ]);
+
+    await walletKit.handlers['cardano_signTx']!(topic, txA);
+    await walletKit.handlers['cardano_signTx']!(topic, txB);
+
+    expect(walletKit.responses.map((r) => r.response.id), [101, 102]);
+  });
+
   test('does not answer an unrelated pending request', () async {
     walletKit.pending.requests.add(
       _sessionRequest(
