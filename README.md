@@ -24,7 +24,7 @@ Add `wallet_connect_cardano` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  wallet_connect_cardano: ^0.1.1
+  wallet_connect_cardano: ^0.1.2
 ```
 
 Then run:
