@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Scrollable approval sheet for sign / submit requests.
 class SigningApprovalDialog extends StatelessWidget {

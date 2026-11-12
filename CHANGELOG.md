@@ -1,3 +1,23 @@
+## 0.1.2
+
+### Fixed
+
+- Answer each request with its own id when a dApp sends two requests of the
+  same method concurrently. Reown can store the second request before the
+  handler for the first runs, so matching by topic and method could reply to
+  the wrong id (#9).
+
+### Changed
+
+- Dependencies: no constraint changes (`reown_walletkit` / `reown_core`
+  1.5.1 are still the latest). Toolchain: Flutter 3.50.0 in `.tool-versions`
+  and CI; CI uses `actions/checkout@v7` and `actions/setup-node@v7`.
+- Example: `cardano_flutter_sdk` ^4.0.1 → ^5.5.0, `material_ui` instead of the
+  deprecated `package:flutter/material.dart`, Android AGP 9.3.1 / Gradle 9.5.0
+  / Kotlin 2.4.20, iOS CocoaPods integration committed.
+- Web demo: `@walletconnect/sign-client` and `@walletconnect/types` 2.26.0,
+  Vite 8.3.7 (fixes a high-severity advisory in Vite's dev server), TypeScript 7.
+
 ## 0.1.1
 
 ### Fixed

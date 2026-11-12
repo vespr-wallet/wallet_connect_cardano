@@ -1,0 +1,29 @@
+PODS:
+  - Flutter (1.0.0)
+  - walletconnect_pay (0.0.1):
+    - Flutter
+    - YttriumWrapper (= 0.10.59)
+  - YttriumWrapper (0.10.59)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - walletconnect_pay (from `.symlinks/plugins/walletconnect_pay/ios`)
+
+SPEC REPOS:
+  trunk:
+    - YttriumWrapper
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  walletconnect_pay:
+    :path: ".symlinks/plugins/walletconnect_pay/ios"
+
+SPEC CHECKSUMS:
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
+  walletconnect_pay: f32ca9b9f5c9e29583072b082a6ef7b5d4e12288
+  YttriumWrapper: 64983f0edbf609b800ac3074010224fc5341aaeb
+
+PODFILE CHECKSUM: 3ba3a73b1b12adcf321a227a745625fe0888cc82
+
+COCOAPODS: 1.17.0
