@@ -49,8 +49,7 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
   Future<void> _bootstrap() async {
     if (!AppConfig.hasReownProjectId) {
       setState(() {
-        _error =
-            'Set REOWN_PROJECT_ID via --dart-define when running the app.';
+        _error = 'Set REOWN_PROJECT_ID via --dart-define when running the app.';
       });
       return;
     }
@@ -83,9 +82,7 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     }
 
     if (_service == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return HomeScreen(service: _service!);

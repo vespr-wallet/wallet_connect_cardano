@@ -15,10 +15,7 @@ class RequestLogEntry {
 }
 
 class WalletConnectService {
-  WalletConnectService({
-    required this.projectId,
-    required this.delegate,
-  });
+  WalletConnectService({required this.projectId, required this.delegate});
 
   final String projectId;
   final DemoWalletDelegate delegate;
@@ -195,9 +192,9 @@ class WalletConnectService {
       final relayConnected = _sdk!.walletKit.core.relayClient.isConnected;
       _lastError = relayConnected
           ? 'Timed out waiting for session proposal. In the browser, click Connect '
-              'first so it shows "Waiting for wallet…", then scan the fresh QR.'
+                'first so it shows "Waiting for wallet…", then scan the fresh QR.'
           : 'Wallet relay is offline — rebuild the app after granting INTERNET '
-              'permission and check your network.';
+                'permission and check your network.';
       _notify();
     }
   }

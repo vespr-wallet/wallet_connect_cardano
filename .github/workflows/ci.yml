@@ -36,9 +36,7 @@ jobs:
       - name: Check formatting
         run: >-
           dart format --output=none --set-exit-if-changed
-          lib test example/lib/config.dart
-          example/lib/delegate/demo_wallet_delegate.dart
-          example/lib/wallet/demo_wallet.dart example/test
+          lib test example
 
       - name: Analyze SDK
         run: dart analyze --fatal-infos

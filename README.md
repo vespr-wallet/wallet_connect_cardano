@@ -419,10 +419,8 @@ change:
 
 ```bash
 flutter pub get
-dart format --output=none --set-exit-if-changed lib test example/lib/config.dart \
-  example/lib/delegate/demo_wallet_delegate.dart \
-  example/lib/wallet/demo_wallet.dart example/test
-dart analyze
+dart format --output=none --set-exit-if-changed lib test example
+dart analyze --fatal-infos
 flutter test
 (cd example && flutter analyze && flutter test)
 (cd demo/dapp-web && npm ci && npm run build)
