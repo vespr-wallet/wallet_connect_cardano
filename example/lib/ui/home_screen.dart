@@ -106,9 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _scanQr() async {
-    final uri = await Navigator.of(context).push<Uri>(
-      MaterialPageRoute<Uri>(builder: (_) => const QrScanScreen()),
-    );
+    final uri = await Navigator.of(
+      context,
+    ).push<Uri>(MaterialPageRoute<Uri>(builder: (_) => const QrScanScreen()));
     if (uri != null) await _pair(uri);
   }
 
@@ -133,7 +133,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -163,140 +165,150 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: <Widget>[
           ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
-          if (connected)
-            Card(
-              color: Colors.green.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Connected',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.green.shade800,
-                            fontWeight: FontWeight.bold,
-                          ),
+            padding: const EdgeInsets.all(16),
+            children: <Widget>[
+              if (connected)
+                Card(
+                  color: Colors.green.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Connected',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Colors.green.shade800,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text('dApp: ${service.connectedDappName ?? "Unknown"}'),
+                        const Text('Chain: cip34:0-1 (preprod)'),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text('dApp: ${service.connectedDappName ?? "Unknown"}'),
-                    const Text('Chain: cip34:0-1 (preprod)'),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          if (operation?.isFailed == true &&
-              operation!.method == 'cardano_submitTx') ...<Widget>[
-            const SizedBox(height: 8),
-            Card(
-              color: Colors.red.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Transaction submit failed',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Colors.red.shade800,
-                            fontWeight: FontWeight.bold,
-                          ),
+              if (operation?.isFailed == true &&
+                  operation!.method == 'cardano_submitTx') ...<Widget>[
+                const SizedBox(height: 8),
+                Card(
+                  color: Colors.red.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Transaction submit failed',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                color: Colors.red.shade800,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(operation.message ?? 'Unknown error'),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(operation.message ?? 'Unknown error'),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ],
-          if (submittedTx != null) ...<Widget>[
-            const SizedBox(height: 8),
-            Card(
-              color: Colors.green.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Transaction submitted',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Colors.green.shade800,
-                            fontWeight: FontWeight.bold,
-                          ),
+              ],
+              if (submittedTx != null) ...<Widget>[
+                const SizedBox(height: 8),
+                Card(
+                  color: Colors.green.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Transaction submitted',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                color: Colors.green.shade800,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        SelectableText(submittedTx),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () => _openCardanoscan(submittedTx),
+                          child: const Text('View on preprod Cardanoscan'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    SelectableText(submittedTx),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => _openCardanoscan(submittedTx),
-                      child: const Text('View on preprod Cardanoscan'),
+                  ),
+                ),
+              ],
+              if (service.isAwaitingProposal &&
+                  !service.hasPendingProposal) ...<Widget>[
+                const SizedBox(height: 8),
+                const LinearProgressIndicator(),
+                const SizedBox(height: 8),
+                const Text('Waiting for connection request from dApp…'),
+              ],
+              if (service.lastError != null) ...<Widget>[
+                const SizedBox(height: 8),
+                Card(
+                  color: Colors.red.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      service.lastError!,
+                      style: TextStyle(color: Colors.red.shade900),
                     ),
-                  ],
+                  ),
                 ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                'Wallet address',
+                style: Theme.of(context).textTheme.titleSmall,
               ),
-            ),
-          ],
-          if (service.isAwaitingProposal && !service.hasPendingProposal) ...<Widget>[
-            const SizedBox(height: 8),
-            const LinearProgressIndicator(),
-            const SizedBox(height: 8),
-            const Text('Waiting for connection request from dApp…'),
-          ],
-          if (service.lastError != null) ...<Widget>[
-            const SizedBox(height: 8),
-            Card(
-              color: Colors.red.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  service.lastError!,
-                  style: TextStyle(color: Colors.red.shade900),
+              SelectableText(service.delegate.demoWallet.paymentAddressBech32),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: _scanQr,
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('Scan QR'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _uriController,
+                decoration: const InputDecoration(
+                  labelText: 'WalletConnect URI',
+                  hintText: 'wc:...',
+                  border: OutlineInputBorder(),
                 ),
+                maxLines: 3,
               ),
-            ),
-          ],
-          const SizedBox(height: 16),
-          Text('Wallet address', style: Theme.of(context).textTheme.titleSmall),
-          SelectableText(service.delegate.demoWallet.paymentAddressBech32),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: _scanQr,
-            icon: const Icon(Icons.qr_code_scanner),
-            label: const Text('Scan QR'),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: _pasteAndPair,
+                child: const Text('Pair from pasted URI'),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'CIP-30 request log',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              if (_log.isEmpty)
+                const Text('No requests yet — connect to the web dApp demo.')
+              else
+                ..._log.map(
+                  (entry) => ListTile(
+                    dense: true,
+                    title: Text(entry.method),
+                    subtitle: Text(entry.timestamp.toIso8601String()),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _uriController,
-            decoration: const InputDecoration(
-              labelText: 'WalletConnect URI',
-              hintText: 'wc:...',
-              border: OutlineInputBorder(),
-            ),
-            maxLines: 3,
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: _pasteAndPair,
-            child: const Text('Pair from pasted URI'),
-          ),
-          const SizedBox(height: 24),
-          Text('CIP-30 request log', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          if (_log.isEmpty)
-            const Text('No requests yet — connect to the web dApp demo.')
-          else
-            ..._log.map(
-              (entry) => ListTile(
-                dense: true,
-                title: Text(entry.method),
-                subtitle: Text(entry.timestamp.toIso8601String()),
-              ),
-            ),
-        ],
-      ),
           if (operation?.isProcessing == true)
             ColoredBox(
               color: Colors.black54,

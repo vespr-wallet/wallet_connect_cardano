@@ -1,3 +1,12 @@
+## Unreleased
+
+### Changed
+
+- CI checks formatting for the whole example app (it covered three example
+  files and `example/test`), and the example is formatted. The README's
+  development checks match CI (`dart analyze --fatal-infos`). The package code
+  is unchanged.
+
 ## 0.1.2
 
 ### Fixed

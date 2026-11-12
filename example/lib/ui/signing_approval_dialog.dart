@@ -25,10 +25,7 @@ class SigningApprovalDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               if (subtitle != null) ...<Widget>[
-                Text(
-                  subtitle!,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+                Text(subtitle!, style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 12),
               ],
               SelectableText(
