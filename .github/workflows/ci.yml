@@ -41,7 +41,7 @@ jobs:
           example/lib/wallet/demo_wallet.dart example/test
 
       - name: Analyze SDK
-        run: dart analyze
+        run: dart analyze --fatal-infos
 
       - name: Test SDK
         run: flutter test --coverage
