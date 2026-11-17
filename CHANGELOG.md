@@ -6,6 +6,10 @@
   files and `example/test`), and the example is formatted. The README's
   development checks match CI (`dart analyze --fatal-infos`). The package code
   is unchanged.
+- Dependencies (example and web demo only, the package is unchanged): example
+  Kotlin Gradle plugin 2.4.20 → 2.4.21; web demo Vite 8.3.7 → 8.3.8 (rolldown
+  1.2.19), and the demo gets an `.npmrc` with `min-release-age=5`, so npm
+  skips releases younger than five days.
 
 ## 0.1.2
 
