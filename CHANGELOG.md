@@ -11,6 +11,9 @@
   1.2.19), and the demo gets an `.npmrc` with `min-release-age=5`, so npm
   skips releases younger than five days.
 - Tooling: Flutter 3.50.1 (still Dart 3.14.0) in `.tool-versions` and CI.
+- Tooling: CI reads the Flutter version from `.tool-versions` instead of a
+  hard-coded `flutter-version`, so a Flutter bump only edits `.tool-versions`.
+  The step fails if the `flutter` line is missing.
 
 ## 0.1.2
 
