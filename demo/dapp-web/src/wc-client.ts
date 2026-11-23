@@ -161,16 +161,19 @@ function formatRequestError(error: unknown): string {
   if (typeof error === 'string') return error;
 
   if (typeof error === 'object') {
-    const record = error as Record<string, unknown>;
-    const message = record.message;
-    if (typeof message === 'string' && message.length > 0) {
-      return message;
+    if ('message' in error && typeof error.message === 'string' && error.message.length > 0) {
+      return error.message;
     }
-    const data = record.data;
-    if (typeof data === 'object' && data != null) {
-      const dataMessage = (data as Record<string, unknown>).message;
-      if (typeof dataMessage === 'string' && dataMessage.length > 0) {
-        return dataMessage;
+    if ('data' in error) {
+      const data = error.data;
+      if (
+        typeof data === 'object' &&
+        data != null &&
+        'message' in data &&
+        typeof data.message === 'string' &&
+        data.message.length > 0
+      ) {
+        return data.message;
       }
     }
   }

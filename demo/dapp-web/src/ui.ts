@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 
 import { READ_METHODS } from './constants';
+import { requireElement } from './dom';
 import { attachWitnesses, buildSelfTransfer } from './tx';
 import type { CardanoDappClient } from './wc-client';
 
@@ -9,16 +10,16 @@ const CARDANOSCAN_PREPROD_TX_BASE = 'https://preprod.cardanoscan.io/transaction/
 const COLLATERAL_AMOUNT_CBOR = '1a004c4b40';
 
 export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
-  const statusEl = document.getElementById('status')!;
-  const connectBtn = document.getElementById('btn-connect') as HTMLButtonElement;
-  const qrContainer = document.getElementById('qr-container')!;
-  const qrCanvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
-  const uriTextarea = document.getElementById('wc-uri') as HTMLTextAreaElement;
-  const sessionInfo = document.getElementById('session-info')!;
-  const methodsSection = document.getElementById('methods-section')!;
-  const writeSection = document.getElementById('write-section')!;
-  const submitBtn = document.getElementById('btn-submit-tx') as HTMLButtonElement;
-  const txStatusEl = document.getElementById('tx-status')!;
+  const statusEl = requireElement('status', HTMLElement);
+  const connectBtn = requireElement('btn-connect', HTMLButtonElement);
+  const qrContainer = requireElement('qr-container', HTMLElement);
+  const qrCanvas = requireElement('qr-canvas', HTMLCanvasElement);
+  const uriTextarea = requireElement('wc-uri', HTMLTextAreaElement);
+  const sessionInfo = requireElement('session-info', HTMLElement);
+  const methodsSection = requireElement('methods-section', HTMLElement);
+  const writeSection = requireElement('write-section', HTMLElement);
+  const submitBtn = requireElement('btn-submit-tx', HTMLButtonElement);
+  const txStatusEl = requireElement('tx-status', HTMLElement);
 
   let cachedPaymentAddressHex: string | null = null;
   let signedTxHex: string | null = null;
@@ -83,8 +84,9 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
   }
 
   document.querySelectorAll<HTMLButtonElement>('[data-method]').forEach((btn) => {
+    const method = btn.dataset.method;
+    if (method === undefined) return;
     btn.addEventListener('click', async () => {
-      const method = btn.dataset.method!;
       btn.disabled = true;
       try {
         await invokeMethod(method);
@@ -99,8 +101,8 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
     });
   });
 
-  document.getElementById('btn-run-read')!.addEventListener('click', async () => {
-    const btn = document.getElementById('btn-run-read') as HTMLButtonElement;
+  requireElement('btn-run-read', HTMLElement).addEventListener('click', async () => {
+    const btn = requireElement('btn-run-read', HTMLButtonElement);
     btn.disabled = true;
     try {
       for (const method of READ_METHODS) {
@@ -194,9 +196,8 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
     if (error == null) return 'Unknown error';
     if (typeof error === 'string') return error;
     if (error instanceof Error) return error.message;
-    if (typeof error === 'object') {
-      const record = error as Record<string, unknown>;
-      if (typeof record.message === 'string') return record.message;
+    if (typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+      return error.message;
     }
     return String(error);
   }
@@ -211,13 +212,9 @@ export function setupUi(client: CardanoDappClient, logEl: HTMLElement): void {
   async function resolvePaymentAddressHex(): Promise<string> {
     if (cachedPaymentAddressHex) return cachedPaymentAddressHex;
     const used = await client.request<string[]>('cardano_getUsedAddresses');
-    if (!used?.length) {
-      cachedPaymentAddressHex = await client.request<string>(
-        'cardano_getChangeAddress',
-      );
-    } else {
-      cachedPaymentAddressHex = used[0]!;
-    }
-    return cachedPaymentAddressHex;
+    const address =
+      used?.[0] ?? (await client.request<string>('cardano_getChangeAddress'));
+    cachedPaymentAddressHex = address;
+    return address;
   }
 }

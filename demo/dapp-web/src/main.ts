@@ -1,9 +1,10 @@
 import { REOWN_PROJECT_ID } from './constants';
+import { requireElement } from './dom';
 import { setupUi } from './ui';
 import { CardanoDappClient } from './wc-client';
 
 const projectId = REOWN_PROJECT_ID;
-const logEl = document.getElementById('log')!;
+const logEl = requireElement('log', HTMLElement);
 
 function appendLog(message: string, data?: unknown): void {
   const timestamp = new Date().toISOString().slice(11, 19);
