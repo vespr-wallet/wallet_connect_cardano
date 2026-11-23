@@ -22,6 +22,9 @@
   PR on lint issues. TypeScript goes back from 7.0 to 6.0.3, because
   typescript-eslint supports TypeScript below 6.1 only; the other VESPR
   TypeScript repos stay on 6 for the same reason. The package is unchanged.
+- Web demo: no non-null assertions or element casts. A `requireElement`
+  helper checks each element's type and names the missing id, and lint
+  rejects new `!` assertions. The package is unchanged.
 
 ## 0.1.2
 
