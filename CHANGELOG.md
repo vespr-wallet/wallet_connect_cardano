@@ -17,6 +17,11 @@
 - Web demo lockfile refresh (transitive only, the package is unchanged):
   postcss 8.5.33, source-map-js 1.2.3, ws 7.5.14, @rolldown/pluginutils
   1.1.1, @tybys/wasm-util 0.10.5. `npm audit` stays at 0.
+- Web demo: ESLint 10 with typescript-eslint 8.73 (`eslint.config.js`, the
+  recommended rule sets, `npm run lint`), and the CI "Web demo" job fails the
+  PR on lint issues. TypeScript goes back from 7.0 to 6.0.3, because
+  typescript-eslint supports TypeScript below 6.1 only; the other VESPR
+  TypeScript repos stay on 6 for the same reason. The package is unchanged.
 
 ## 0.1.2
 
