@@ -14,6 +14,9 @@
 - Tooling: CI reads the Flutter version from `.tool-versions` instead of a
   hard-coded `flutter-version`, so a Flutter bump only edits `.tool-versions`.
   The step fails if the `flutter` line is missing.
+- Web demo lockfile refresh (transitive only, the package is unchanged):
+  postcss 8.5.33, source-map-js 1.2.3, ws 7.5.14, @rolldown/pluginutils
+  1.1.1, @tybys/wasm-util 0.10.5. `npm audit` stays at 0.
 
 ## 0.1.2
 
