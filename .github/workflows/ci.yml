@@ -79,9 +79,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version-file: demo/dapp-web/.nvmrc
           cache: npm
           cache-dependency-path: demo/dapp-web/package-lock.json
+
+      # Keep in sync with demo/dapp-web/package.json "engines"
+      - name: Update npm
+        run: npm install -g npm@12.2.3
 
       - name: Install dependencies
         run: npm ci
