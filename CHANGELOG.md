@@ -25,6 +25,10 @@
 - Web demo: no non-null assertions or element casts. A `requireElement`
   helper checks each element's type and names the missing id, and lint
   rejects new `!` assertions. The package is unchanged.
+- Web demo tooling: the demo pins Node (`.nvmrc` 24.22.3, `engines.node`
+  `>=24.22.3`) and npm (`engines.npm` 12.2.3). Its CI job reads Node from
+  `.nvmrc` and installs npm 12.2.3, instead of floating Node 24 with the npm it
+  bundles. The package is unchanged.
 
 ## 0.1.2
 
